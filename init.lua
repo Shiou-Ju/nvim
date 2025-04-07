@@ -1,3 +1,12 @@
+-- 領導鍵（Leader Key）解釋
+-- 領導鍵是 Vim/Neovim 中用於觸發一系列自定義快捷命令的特殊按鍵。它允許您創建多層次的快捷鍵組合，避免與內建命令衝突。預設的領導鍵是反斜線（\），但大多數使用者會將其設定為空格鍵，因為空格鍵位置容易按到且不常用於其他命令。
+-- 例如，設定空格為領導鍵後，您可以使用 <space>ff 來啟動檔案搜尋，使用 <space>fg 來啟動內容搜尋等。
+
+
+-- 設定空格鍵為領導鍵
+vim.g.mapleader = " "
+
+
 -- 初始化 lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
@@ -27,6 +36,25 @@ else
     vim.keymap.set('n', '<C-j>', '<C-w>j')
     vim.keymap.set('n', '<C-k>', '<C-w>k')
     vim.keymap.set('n', '<C-l>', '<C-w>l')
+
+
+    -- Telescope 快捷鍵設定
+    vim.keymap.set('n', '<leader>ff', function()
+      require('telescope.builtin').find_files()
+    end, { desc = '搜尋檔案' })
+    
+    vim.keymap.set('n', '<leader>fg', function()
+      require('telescope.builtin').live_grep()
+    end, { desc = '搜尋文字內容' })
+    
+    vim.keymap.set('n', '<leader>fb', function()
+      require('telescope.builtin').buffers()
+    end, { desc = '搜尋緩衝區' })
+    
+    vim.keymap.set('n', '<leader>fh', function()
+      require('telescope.builtin').help_tags()
+    end, { desc = '搜尋幫助文檔' })
+
 end
 
 
@@ -60,6 +88,28 @@ require("lazy").setup({
       vim.g.vim_markdown_strikethrough = 1
       vim.g.vim_markdown_new_list_item_indent = 2
       vim.g.vim_markdown_toc_autofit = 1
+    end,
+  },
+    -- Telescope - 模糊搜尋工具
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons", -- 可選，提供檔案圖示
+    },
+    config = function()
+      local telescope = require("telescope")
+      telescope.setup({
+        defaults = {
+          file_ignore_patterns = { "node_modules", ".git" },
+          mappings = {
+            i = {
+              ["<C-j>"] = "move_selection_next",
+              ["<C-k>"] = "move_selection_previous",
+            },
+          },
+        },
+      })
     end,
   },
 })
