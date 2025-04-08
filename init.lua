@@ -37,6 +37,23 @@ else
     vim.keymap.set('n', '<C-k>', '<C-w>k')
     vim.keymap.set('n', '<C-l>', '<C-w>l')
 
+    -- 自訂 zt 命令，保留 3 行緩衝
+    vim.keymap.set(
+      'n',                -- 在普通模式(normal mode)下生效
+      'zt',               -- 重新定義 zt 按鍵組合
+      function()          -- 定義按下 zt 時要執行的函數
+        vim.cmd('normal! zt')  -- 先執行原始的 zt 命令，將當前行移到視窗頂部
+             -- normal! 中的 ! 確保使用 Vim 內建命令而非用戶自定義命令
+        
+        vim.cmd('execute "normal! 3\\<C-y>"')  -- 向上滾動 3 行
+                 -- execute 用於執行字串作為命令
+                 -- 3 表示重複 <C-y> 三次
+                 -- <C-y> 是 Vim 中向上滾動一行的命令
+                 -- 雙反斜線 \\ 用於在 Lua 字串中逸出反斜線
+      end,
+      { desc = '將當前行置頂並保留 3 行緩衝' }  -- 為這個映射提供描述，方便將來查看
+    )
+
 
     -- Telescope 快捷鍵設定
     vim.keymap.set('n', '<leader>ff', function()
@@ -172,6 +189,24 @@ vim.opt.listchars = ""  -- 清空所有特殊字符的顯示符號
 ---- 其他有助於改善顯示的設定
 -- vim.opt.display = "lastline"  -- 顯示超長行的最大部分
 -- vim.opt.sidescroll = 1        -- 水平滾動時一次移動一個字符
+
+
+---- 設定 indent
+-- 設定縮排為 2 個空格
+vim.opt.shiftwidth = 2
+
+-- 設定 Tab 鍵等同的空格數
+vim.opt.tabstop = 2
+
+-- 讓 Tab 鍵產生空格而非真正的 Tab 字元
+vim.opt.expandtab = true
+
+-- 在插入模式下使用 Tab 時，插入 'shiftwidth' 指定的空格數
+vim.opt.smarttab = true
+
+-- 自動縮排，保持與上一行相同的縮排級別
+vim.opt.autoindent = true
+
 
 -- 設定換行時不顯示任何標記
 -- vim.cmd([[autocmd VimEnter,BufEnter * set showbreak=]])
