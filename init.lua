@@ -37,6 +37,24 @@ else
     vim.keymap.set('n', '<C-k>', '<C-w>k')
     vim.keymap.set('n', '<C-l>', '<C-w>l')
 
+    -- 縮排
+    -- 在插入模式下使用 Tab 進行縮排
+    vim.keymap.set('i', '<Tab>', '<C-t>', { desc = '縮排', noremap = true })
+
+    -- 在普通模式和視覺模式下使用 Tab 進行縮排
+    vim.keymap.set('n', '<Tab>', '>>', { desc = '縮排', noremap = true })
+    vim.keymap.set('v', '<Tab>', '>gv', { desc = '縮排並保持選擇', noremap = true })
+
+    -- 反縮排
+    -- 在插入模式下使用 Shift+Tab 進行反縮排
+    vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = '反縮排', noremap = true })
+
+    -- 在普通模式和視覺模式下使用 Shift+Tab 進行反縮排
+    vim.keymap.set('n', '<S-Tab>', '<<', { desc = '反縮排', noremap = true })
+    vim.keymap.set('v', '<S-Tab>', '<gv', { desc = '反縮排並保持選擇', noremap = true })
+
+
+
     -- 自訂 zt 命令，保留 3 行緩衝
     vim.keymap.set(
       'n',                -- 在普通模式(normal mode)下生效
@@ -71,6 +89,11 @@ else
     vim.keymap.set('n', '<leader>fh', function()
       require('telescope.builtin').help_tags()
     end, { desc = '搜尋幫助文檔' })
+
+    vim.keymap.set('n', '<leader>@', function()
+      require('telescope.builtin').current_buffer_fuzzy_find()
+    end, { desc = '模糊搜尋當前緩衝區' })
+
 
 end
 
@@ -189,6 +212,11 @@ vim.opt.listchars = ""  -- 清空所有特殊字符的顯示符號
 ---- 其他有助於改善顯示的設定
 -- vim.opt.display = "lastline"  -- 顯示超長行的最大部分
 -- vim.opt.sidescroll = 1        -- 水平滾動時一次移動一個字符
+
+-- 設定智能大小寫（如果搜尋詞中包含大寫字母，則變為區分大小寫）
+vim.opt.ignorecase = true  -- 不區分大小寫
+-- 上面那個要打開，下面才會生效
+vim.opt.smartcase = true   -- 如果包含大寫字母，則自動切換為區分大小寫
 
 
 ---- 設定 indent
