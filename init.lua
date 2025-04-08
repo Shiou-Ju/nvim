@@ -67,15 +67,27 @@ vim.cmd('filetype plugin indent on')  -- 啟用檔案類型偵測
 -- 載入插件
 require("lazy").setup({
   -- 顏色方案
-  {
-    "folke/tokyonight.nvim",
-    lazy = false,
-    priority = 1000,  -- 確保它先載入
-    config = function()
-      vim.cmd('colorscheme tokyonight-night')  -- 套用顏色方案
-    end,
-  },
-  
+	  {
+	  "folke/tokyonight.nvim",
+	  lazy = false,
+	  priority = 1000,  -- 確保它先載入
+	  config = function()
+	    require("tokyonight").setup({
+	      style = "night",
+	      styles = {
+		-- 禁用所有斜體樣式 do
+		comments = { italic = false },
+		keywords = { italic = false },
+		functions = { italic = false },
+		variables = { italic = false },
+		-- 禁用所有斜體樣式 end
+		sidebars = "dark",
+		floats = "dark",
+	      },
+	    })
+	    vim.cmd('colorscheme tokyonight-night')  -- 套用顏色方案
+	  end,
+	},
   -- Markdown 支援
   {
     "preservim/vim-markdown",
