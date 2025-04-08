@@ -32,10 +32,30 @@ else
     vim.keymap.set('i', 'jj', '<Esc>')
     vim.keymap.set('n', 'zc', ':foldclose<CR>')
     vim.keymap.set('n', 'zo', ':foldopen<CR>')
-    vim.keymap.set('n', '<C-h>', '<C-w>h')
-    vim.keymap.set('n', '<C-j>', '<C-w>j')
-    vim.keymap.set('n', '<C-k>', '<C-w>k')
-    vim.keymap.set('n', '<C-l>', '<C-w>l')
+    -- 導航切換視窗 
+    vim.keymap.set('n', '<leader>h', '<C-w>h', { desc = '向左切換視窗' })
+    vim.keymap.set('n', '<leader>j', '<C-w>j', { desc = '向下切換視窗' })
+    vim.keymap.set('n', '<leader>k', '<C-w>k', { desc = '向上切換視窗' })
+    vim.keymap.set('n', '<leader>l', '<C-w>l', { desc = '向右切換視窗' })
+    -- 專門處理 terminal 的視窗
+    -- <C-\\><C-n>: 先從終端模式退出到普通模式
+    vim.keymap.set('t', '<leader>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
+    vim.keymap.set('t', '<leader>j', '<C-\\><C-n><C-w>j', { desc = '從終端向下切換視窗' })
+    vim.keymap.set('t', '<leader>k', '<C-\\><C-n><C-w>k', { desc = '從終端向上切換視窗' })
+    vim.keymap.set('t', '<leader>l', '<C-\\><C-n><C-w>l', { desc = '從終端向右切換視窗' })
+
+    -- 使用 Alt + hjkl 導航 (適用於所有模式，包括終端)
+    -- 因為 ctrl + k 等，在 terminal 環境會衝突，所以改用 alt 
+    -- 但是 alt 跟 mac 或是 iterm 等會互相衝突，所以暫時棄用
+    -- vim.keymap.set({'n', 't'}, '<A-h>', '<C-\\><C-n><C-w>h', { desc = '向左切換視窗' })
+    -- vim.keymap.set({'n', 't'}, '<A-j>', '<C-\\><C-n><C-w>j', { desc = '向下切換視窗' })
+    -- vim.keymap.set({'n', 't'}, '<A-k>', '<C-\\><C-n><C-w>k', { desc = '向上切換視窗' })
+    -- vim.keymap.set({'n', 't'}, '<A-l>', '<C-\\><C-n><C-w>l', { desc = '向右切換視窗' })
+    -- 暫時棄用 ctrl 導航視窗
+    -- vim.keymap.set('n', '<C-h>', '<C-w>h')
+    -- vim.keymap.set('n', '<C-j>', '<C-w>j')
+    -- vim.keymap.set('n', '<C-k>', '<C-w>k')
+    -- vim.keymap.set('n', '<C-l>', '<C-w>l')
 
     -- 縮排
     -- 在插入模式下使用 Tab 進行縮排
