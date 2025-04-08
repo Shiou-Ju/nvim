@@ -173,6 +173,84 @@ require("lazy").setup({
       })
     end,
   },
+   -- LSP 基本配置
+  {
+    "neovim/nvim-lspconfig",
+    dependencies = {
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
+    },
+    config = function()
+      -- 設定 mason
+      require("mason").setup()
+      require("mason-lspconfig").setup({
+        ensure_installed = { "jdtls" },  -- 確保安裝 Java LSP
+      })
+
+      -- 設定 LSP 按鍵映射
+      local on_attach = function(_, bufnr)
+        -- 顯示錯誤信息
+        vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = '顯示錯誤信息', buffer = bufnr })
+        -- 跳到下一個錯誤
+        vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = '前一個錯誤', buffer = bufnr })
+        -- 跳到上一個錯誤
+        vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = '下一個錯誤', buffer = bufnr })
+      end
+
+      -- 配置 Java LSP
+      require('lspconfig').jdtls.setup({
+        on_attach = on_attach,
+      })
+
+      -- 配置錯誤顯示
+      vim.diagnostic.config({
+        virtual_text = true,      -- 在代碼旁邊顯示錯誤
+        signs = true,             -- 在行號旁顯示錯誤標記
+        underline = true,         -- 在錯誤下方加底線
+        update_in_insert = false, -- 不在插入模式時更新錯誤
+        severity_sort = true,     -- 按嚴重性排序錯誤
+      })
+    end,
+  },
+  -- 會顯示哪邊在 git 有變動
+  {
+  "lewis6991/gitsigns.nvim",
+  config = function()
+    require('gitsigns').setup({
+      signs = {
+        add          = { text = '│' },
+        change       = { text = '│' },
+        delete       = { text = '_' },
+        topdelete    = { text = '‾' },
+        changedelete = { text = '~' },
+        untracked    = { text = '┆' },
+      },
+      on_attach = function(bufnr)
+        local gs = package.loaded.gitsigns
+        
+        -- 導航變更
+        vim.keymap.set('n', ']c', function()
+          if vim.wo.diff then return ']c' end
+          vim.schedule(function() gs.next_hunk() end)
+          return '<Ignore>'
+        end, {expr=true, buffer=bufnr})
+        
+        vim.keymap.set('n', '[c', function()
+          if vim.wo.diff then return '[c' end
+          vim.schedule(function() gs.prev_hunk() end)
+          return '<Ignore>'
+        end, {expr=true, buffer=bufnr})
+        
+        -- 查看變更的 diff
+        vim.keymap.set('n', '<leader>gd', gs.preview_hunk, {buffer=bufnr, desc = '預覽變更'})
+        
+        -- 暫存和復原變更
+        vim.keymap.set('n', '<leader>gs', gs.stage_hunk, {buffer=bufnr, desc = '暫存變更'})
+        vim.keymap.set('n', '<leader>gr', gs.reset_hunk, {buffer=bufnr, desc = '復原變更'})
+      end
+    })
+  end
+}
 })
 
 
