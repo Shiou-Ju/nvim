@@ -218,8 +218,36 @@ require("lazy").setup({
       end
 
       -- 配置 Java LSP
+      local java_home = "/opt/homebrew/Cellar/openjdk@21/21.0.6/libexec/openjdk.jdk/Contents/Home"
+
+      -- 檢查並創建 jdtls 工作空間目錄
+      local jdtls_workspace_dir = vim.fn.expand("~/.cache/jdtls/workspace")
+      local jdtls_workspace_parent = vim.fn.fnamemodify(jdtls_workspace_dir, ":h") -- 獲取父目錄
+      if vim.fn.isdirectory(jdtls_workspace_dir) == 0 then
+        -- 如果父目錄不存在，先創建父目錄
+        if vim.fn.isdirectory(jdtls_workspace_parent) == 0 then
+          vim.fn.mkdir(jdtls_workspace_parent, "p")
+        end
+        -- 創建工作空間目錄
+        vim.fn.mkdir(jdtls_workspace_dir, "p")
+      end
+
       require('lspconfig').jdtls.setup({
         on_attach = on_attach,
+        cmd = {
+          java_home .. "/bin/java",  -- 明確指定 Java 21 路徑
+          "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+          "-Dosgi.bundles.defaultStartLevel=4",
+          "-Declipse.product=org.eclipse.jdt.ls.core.product",
+          "-Dlog.level=ALL",
+          "-Xmx1g",
+          "--add-modules=ALL-SYSTEM",
+          "--add-opens", "java.base/java.util=ALL-UNNAMED",
+          "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+          "-jar", vim.fn.glob(vim.fn.stdpath("data") .. "/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_*.jar"),
+          "-configuration", vim.fn.stdpath("data") .. "/mason/packages/jdtls/config_mac",
+          "-data", jdtls_workspace_dir .. vim.fn.getcwd(),
+        },
       })
 
       -- 配置錯誤顯示
