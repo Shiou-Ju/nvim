@@ -86,6 +86,15 @@ require("lazy").setup({
 	      },
 	    })
 	    vim.cmd('colorscheme tokyonight-night')  -- 套用顏色方案
+		-- 讓 git commit 註解變比較明顯
+		vim.api.nvim_create_autocmd("ColorScheme", {
+		  pattern = "*",
+		  callback = function()
+		    -- 設定註解的顏色（無斜體但顏色更鮮明）
+		    vim.api.nvim_set_hl(0, "Comment", { fg = "#7a88cf", italic = false })
+		    vim.api.nvim_set_hl(0, "gitcommitComment", { fg = "#7a88cf", italic = false })
+		  end
+		})
 	  end,
 	},
   -- Markdown 支援
