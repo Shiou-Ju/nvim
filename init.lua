@@ -38,13 +38,14 @@ else
     vim.keymap.set('n', '<leader>k', '<C-w>k', { desc = '向上切換視窗' })
     vim.keymap.set('n', '<leader>l', '<C-w>l', { desc = '向右切換視窗' })
     -- 專門處理 terminal 的視窗
+    vim.keymap.set('t', 'hjkl', '<C-\\><C-n>', { desc = '使用 hjkl 退出終端模式' })
     -- <C-\\><C-n>: 先從終端模式退出到普通模式
     -- 使用 double leader (連續兩次空格) 作為終端導航前綴
-    vim.keymap.set('t', '<leader><leader>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
-    vim.keymap.set('t', '<leader><leader>j', '<C-\\><C-n><C-w>j', { desc = '從終端向下切換視窗' })
-    vim.keymap.set('t', '<leader><leader>k', '<C-\\><C-n><C-w>k', { desc = '從終端向上切換視窗' })
-    vim.keymap.set('t', '<leader><leader>l', '<C-\\><C-n><C-w>l', { desc = '從終端向右切換視窗' })
-
+    -- vim.keymap.set('t', '<leader><leader>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
+    -- vim.keymap.set('t', '<leader><leader>j', '<C-\\><C-n><C-w>j', { desc = '從終端向下切換視窗' })
+    -- vim.keymap.set('t', '<leader><leader>k', '<C-\\><C-n><C-w>k', { desc = '從終端向上切換視窗' })
+    -- vim.keymap.set('t', '<leader><leader>l', '<C-\\><C-n><C-w>l', { desc = '從終端向右切換視窗' })
+    --
 
     -- (不好用)使用 Ctrl + Leader (Ctrl + 空格) 作為終端導航前綴
     -- vim.keymap.set('t', '<C-Space>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
@@ -53,10 +54,12 @@ else
     -- vim.keymap.set('t', '<C-Space>l', '<C-\\><C-n><C-w>l', { desc = '從終端向右切換視窗' })
 
     -- 因為 空白鍵 在 terminal 很常用，所以不可以
-    -- vim.keymap.set('t', '<leader>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
-    -- vim.keymap.set('t', '<leader>j', '<C-\\><C-n><C-w>j', { desc = '從終端向下切換視窗' })
-    -- vim.keymap.set('t', '<leader>k', '<C-\\><C-n><C-w>k', { desc = '從終端向上切換視窗' })
-    -- vim.keymap.set('t', '<leader>l', '<C-\\><C-n><C-w>l', { desc = '從終端向右切換視窗' })
+    -- 所以改成 ctrl \ + leader 
+    -- 這樣太複雜了，我應該選擇怎麼退出 terminal 模式才對
+    -- vim.keymap.set('t', '<C-\\><leader>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
+    -- vim.keymap.set('t', '<C-\\><leader>j', '<C-\\><C-n><C-w>j', { desc = '從終端向下切換視窗' })
+    -- vim.keymap.set('t', '<C-\\><leader>k', '<C-\\><C-n><C-w>k', { desc = '從終端向上切換視窗' })
+    -- vim.keymap.set('t', '<C-\\><leader>l', '<C-\\><C-n><C-w>l', { desc = '從終端向右切換視窗' })
 
     -- 使用 Alt + hjkl 導航 (適用於所有模式，包括終端)
     -- 因為 ctrl + k 等，在 terminal 環境會衝突，所以改用 alt 
