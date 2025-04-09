@@ -112,6 +112,50 @@ else
       { desc = '將當前行置頂並保留 3 行緩衝' }  -- 為這個映射提供描述，方便將來查看
     )
 
+    -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 do
+vim.keymap.set({'n', 'i'}, '<C-`>', function()
+  -- 檢查是否已有終端視窗
+  local term_buffers = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.bo[buf].buftype == 'terminal' then
+      table.insert(term_buffers, buf)
+    end
+  end
+  
+  if #term_buffers > 0 then
+    -- 如果已有終端，切換到第一個終端緩衝區
+    local windows = vim.api.nvim_list_wins()
+    local term_found = false
+    
+    -- 先檢查是否有顯示終端的視窗
+    for _, win in ipairs(windows) do
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].buftype == 'terminal' then
+        vim.api.nvim_set_current_win(win)
+        term_found = true
+        break
+      end
+    end
+    
+    -- 如果沒有顯示終端的視窗，開啟一個新的底部終端視窗
+    if not term_found then
+      vim.cmd('split')
+      vim.cmd('wincmd J')  -- 將視窗移到最底部
+      vim.cmd('resize 23%')
+      vim.cmd('buffer ' .. term_buffers[1])
+      vim.cmd('startinsert')
+    end
+  else
+    -- 如果沒有終端，創建一個新的底部終端
+    vim.cmd('split')
+    vim.cmd('wincmd J')  -- 將視窗移到最底部
+    vim.cmd('resize 23%')
+    vim.cmd('terminal')
+    vim.cmd('startinsert')
+  end
+end, { desc = 'VS Code 風格終端開關 (Ctrl+`)' })
+    -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 end
+
 
     -- Telescope 快捷鍵設定
     vim.keymap.set('n', '<leader>ff', function()
