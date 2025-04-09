@@ -87,6 +87,9 @@ else
     vim.keymap.set('n', '<S-Tab>', '<<', { desc = '反縮排', noremap = true })
     vim.keymap.set('v', '<S-Tab>', '<gv', { desc = '反縮排並保持選擇', noremap = true })
 
+    -- +y 是複製到系統的剪貼簿
+    vim.keymap.set('v', '<leader>y', '"+y', { desc = '複製到系統剪貼簿', noremap = true })
+
 
 
     -- 自訂 zt 命令，保留 3 行緩衝
