@@ -38,7 +38,11 @@ else
     vim.keymap.set('n', '<leader>k', '<C-w>k', { desc = '向上切換視窗' })
     vim.keymap.set('n', '<leader>l', '<C-w>l', { desc = '向右切換視窗' })
     -- 專門處理 terminal 的視窗
-    vim.keymap.set('t', 'hjkl', '<C-\\><C-n>', { desc = '使用 hjkl 退出終端模式' })
+    vim.keymap.set('t', 'JKL:', '<C-\\><C-n>', { desc = '使用 JKL: 退出終端模式' })
+    -- vim.keymap.set('t', 'hjkl', '<C-\\><C-n>', { desc = '使用 hjkl 退出終端模式' })
+   
+    
+    
     -- <C-\\><C-n>: 先從終端模式退出到普通模式
     -- 使用 double leader (連續兩次空格) 作為終端導航前綴
     -- vim.keymap.set('t', '<leader><leader>h', '<C-\\><C-n><C-w>h', { desc = '從終端向左切換視窗' })
@@ -243,19 +247,25 @@ require("lazy").setup({
       "nvim-tree/nvim-web-devicons", -- 可選，提供檔案圖示
     },
     config = function()
-      local telescope = require("telescope")
-      telescope.setup({
-        defaults = {
-          file_ignore_patterns = { "node_modules", ".git" },
-          mappings = {
-            i = {
-              ["<C-j>"] = "move_selection_next",
-              ["<C-k>"] = "move_selection_previous",
-            },
+    local telescope = require("telescope")
+    telescope.setup({
+      defaults = {
+        file_ignore_patterns = { "node_modules", ".git" },
+        mappings = {
+          i = {
+            ["<C-j>"] = "move_selection_next",
+            ["<C-k>"] = "move_selection_previous",
           },
         },
-      })
-    end,
+      },
+      pickers = {
+        find_files = {
+          hidden = true  -- 這裡添加，使 find_files 能夠顯示隱藏檔案
+        }
+      }
+    })
+  end,
+
   },
    -- LSP 基本配置
   {
