@@ -268,7 +268,10 @@ require("lazy").setup({
       -- 設定 mason
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "jdtls" },  -- 確保安裝 Java LSP
+        ensure_installed = { 
+          "jdtls" ,  --java lsp
+          "marksman" --markdown lsp 
+        }, 
       })
 
       -- 設定 LSP 按鍵映射
@@ -296,6 +299,12 @@ require("lazy").setup({
         vim.fn.mkdir(jdtls_workspace_dir, "p")
       end
 
+      -- 配置 marksman
+      require('lspconfig').marksman.setup({
+        on_attach = on_attach,  -- 使用您現有的 on_attach 函數
+      })
+
+      -- 配置 jdtls
       require('lspconfig').jdtls.setup({
         on_attach = on_attach,
         cmd = {
@@ -362,7 +371,29 @@ require("lazy").setup({
       end
     })
   end
-}
+} ,
+    -- markdownlint into vim
+    {
+      "mfussenegger/nvim-lint",
+      event = { "BufReadPre", "BufNewFile" },
+      config = function()
+        require('lint').linters_by_ft = {
+          markdown = {'markdownlint'}
+        }
+        
+        -- 自動執行 lint，在檔案打開和保存時檢查
+        vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter" }, {
+          callback = function()
+            require("lint").try_lint()
+          end,
+        })
+        
+        -- 添加手動檢查的命令
+        vim.api.nvim_create_user_command("LintCheck", function()
+          require("lint").try_lint()
+        end, {})
+      end
+    }
 })
 
 
