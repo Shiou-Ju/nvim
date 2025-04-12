@@ -406,6 +406,33 @@ require("lazy").setup({
     }
 })
 
+-- 解決 terminal 跟文件目錄不一致的問題
+-- 創建一個同步目錄的命令，命名為 CdVimDirHere
+vim.api.nvim_create_user_command('CdVimDirHere', function()
+  -- 獲取當前緩衝區
+  local buf = vim.api.nvim_get_current_buf()
+  -- 檢查是否是終端緩衝區
+  if vim.bo[buf].buftype == 'terminal' then
+    -- 直接在終端發送 pwd 命令並讀取結果
+    local job_id = vim.b[buf].terminal_job_id
+    vim.fn.chansend(job_id, "pwd > /tmp/nvim_cwd && echo '目錄已同步'\n")
+    -- 短暫延遲
+    vim.cmd("sleep 100m")
+    -- 讀取路徑並設定為 Neovim 的工作目錄
+    local cwd = vim.fn.system("cat /tmp/nvim_cwd"):gsub("\n", "")
+    if cwd ~= "" then
+      vim.cmd("cd " .. vim.fn.fnameescape(cwd))
+      print("工作目錄已更新為: " .. cwd)
+    end
+  else
+    print("當前不在終端緩衝區")
+  end
+end, {})
+
+
+-- 只為普通模式設定快捷鍵
+vim.keymap.set('n', '<leader>cd', ':CdVimDirHere<CR>', { desc = '將 Neovim 工作目錄設為當前終端目錄' })
+
 
 
 
