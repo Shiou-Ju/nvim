@@ -437,6 +437,71 @@ vim.keymap.set('n', '<leader>cd', ':CdVimDirHere<CR>', { desc = '將 Neovim 工�
 
 
 
+
+-- 類似 VS Code 中的 Advanced New File 功能
+--
+-- 創建一個名為 NewFile 的自定義命令
+-- 當命令被觸發時，它使用 Telescope（一個檔案瀏覽套件）讓您選擇一個位置
+-- 當您選擇一個位置後，它會提示您輸入新檔案名稱
+-- 如果需要，它會自動創建所需的目錄
+-- 最後，它會打開剛創建的新檔案
+--
+-- 註冊簡易版的新檔案創建命令 do
+vim.api.nvim_create_user_command('NewFile', function()
+    -- 使用 Telescope 尋找目錄
+  require('telescope.builtin').find_files({
+    prompt_title = "選擇檔案位置",
+    attach_mappings = function(prompt_bufnr, map)
+      local actions = require('telescope.actions')
+      local action_state = require('telescope.actions.state')
+      
+      -- 覆寫 Enter 鍵的行為，讓選擇後可以輸入新檔案名
+      actions.select_default:replace(function()
+        -- 獲取用戶在 Telescope 中選擇的項目路徑
+        local selection = action_state.get_selected_entry()
+        local path = selection and selection.path or ""
+        
+        -- 如果選的是檔案而不是目錄，就取其所在目錄
+        if vim.fn.filereadable(path) == 1 then
+          path = vim.fn.fnamemodify(path, ':h')
+        end
+        
+        -- 關閉 Telescope 視窗
+        actions.close(prompt_bufnr)
+        
+        -- 彈出輸入框讓用戶輸入新檔案名稱
+        vim.ui.input({
+          prompt = "新檔案: ",
+          default = path .. '/'  -- 默認使用選擇的目錄路徑
+        }, function(input)
+          if input and input ~= "" then
+            -- 先確保檔案的父目錄存在，如果不存在就創建
+            local dir = vim.fn.fnamemodify(input, ':h')
+            if dir ~= '.' and vim.fn.isdirectory(dir) == 0 then
+              vim.fn.mkdir(dir, 'p')
+            end
+            
+            -- 開啟新檔案（如果不存在會自動創建）
+            vim.cmd('edit ' .. vim.fn.fnameescape(input))
+          end
+        end)
+      end)
+      
+      return true  -- 返回 true 保留 Telescope 默認的其他按鍵映射
+    end
+  })
+end, {})
+
+
+
+-- 設定快捷鍵 <leader>nf 來觸發 NewFile 命令
+vim.keymap.set('n', '<leader>nf', ':NewFile<CR>', {desc = '新建檔案'})
+
+-- 註冊簡易版的新檔案創建命令 end
+
+
+
+
 -- ======================================================
 -- 中文顯示問題解決方案（最簡配置）
 -- ======================================================
