@@ -194,6 +194,89 @@ vim.cmd('filetype plugin indent on')  -- 啟用檔案類型偵測
 
 -- 載入插件
 require("lazy").setup({
+    -- nvim-surround 插件
+      -- 添加環繞 (Add surroundings)：
+        -- ysiw B - 將游標所在單詞加粗
+        -- ysiw I - 將游標所在單詞設為斜體
+        -- ysiw S - 將游標所在單詞加上刪除線
+        -- ysiw( - 將游標所在單詞用括號環繞
+        -- ysiw[ - 將游標所在單詞用方括號環繞
+      -- 刪除環繞 (Delete surroundings)：
+        -- ds( - 刪除周圍的 ()
+        -- ds[ - 刪除周圍的 []
+        -- dsB - 刪除周圍的 ** (粗體)
+        -- dsI - 刪除周圍的 * (斜體)
+        -- dsS - 刪除周圍的 ~~ (刪除線)
+        --
+      -- 更改環繞 (Change surroundings)：
+        --
+        -- cs([ - 將 () 改為 []
+        -- csBI - 將粗體改為斜體
+        -- csSB - 將刪除線改為粗體
+        --
+      -- 在視覺模式下：
+        --
+        -- 選取文字 (按 v 並移動游標)
+        -- 按 S 後輸入：
+        --
+        -- ( 或 ) - 用 () 環繞
+        -- [ 或 ] - 用 [] 環繞
+        -- B - 用 ** 環繞 (粗體)
+        -- I - 用 * 環繞 (斜體)
+        -- S - 用 ~~ 環繞 (刪除線)
+  {
+    "kylechui/nvim-surround",
+    version = "*",  -- 使用最新的穩定版本
+    event = "VeryLazy",
+    config = function()
+      require("nvim-surround").setup({
+        surrounds = {
+          -- 粗體 (Bold)
+             -- 粗體 (Bold)
+          -- ["B"] = {
+          ["M"] = {
+            add = { "**", "**" },
+            find = function()
+              return require("nvim-surround.config").get_selection({ pattern = "%*%*.-%*%*" })
+            end,
+            delete = function()
+              return require("nvim-surround.config").get_selections({
+                char = "B",
+                pattern = "^(%*%*)().-(%*%*)()$",
+              })
+            end,
+          },
+          -- 斜體 (Italic)
+          ["I"] = {
+            add = { "*", "*" },
+            find = function()
+              return require("nvim-surround.config").get_selection({ pattern = "%*.-%*" })
+            end,
+            delete = function()
+              return require("nvim-surround.config").get_selections({
+                char = "I",
+                pattern = "^(%*)().-(%*)()$",
+              })
+            end,
+          },
+          -- 刪除線 (Strikethrough)
+          ["S"] = {
+            add = { "~~", "~~" },
+            find = function()
+              return require("nvim-surround.config").get_selection({ pattern = "~~.-~~" })
+            end,
+            delete = function()
+              return require("nvim-surround.config").get_selections({
+                char = "S",
+                pattern = "^(~~)().-(~~)()$",
+              })
+            end,
+          },
+        },
+        -- 默認的括號配置已經內建支援
+      })
+    end
+  },
   -- 顏色方案
 	  {
 	  "folke/tokyonight.nvim",
