@@ -22,6 +22,16 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- 全域折疊設定
+vim.opt.foldmethod = "indent"
+
+-- 確保檔案開啟時不會自動折疊所有內容
+vim.opt.foldenable = true
+vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
+
+
+
+
 -- 保留原有的設定
 if vim.g.vscode then
     vim.keymap.set('n', 'zc', ":call VSCodeNotify('editor.fold')<CR>")
@@ -30,8 +40,8 @@ if vim.g.vscode then
 else
     vim.opt.relativenumber = true
     vim.keymap.set('i', 'jj', '<Esc>')
-    vim.keymap.set('n', 'zc', ':foldclose<CR>')
-    vim.keymap.set('n', 'zo', ':foldopen<CR>')
+    -- vim.keymap.set('n', 'zc', ':foldclose<CR>')
+    -- vim.keymap.set('n', 'zo', ':foldopen<CR>')
     -- 導航切換視窗 
     vim.keymap.set('n', '<leader>h', '<C-w>h', { desc = '向左切換視窗' })
     vim.keymap.set('n', '<leader>j', '<C-w>j', { desc = '向下切換視窗' })
@@ -715,6 +725,20 @@ vim.opt.smarttab = true
 
 -- 自動縮排，保持與上一行相同的縮排級別
 vim.opt.autoindent = true
+
+
+-- 為 JSON 檔案單獨設定摺疊方法 (放在 init.lua 的適當位置)
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "json",
+  callback = function()
+    -- vim.opt_local.foldmethod = "syntax"  -- 使用語法摺疊
+    vim.opt_local.foldmethod = "indent"  -- 改用縮排折疊
+
+    vim.opt_local.foldenable = true
+  end
+})
+
+
 
 
 -- 設定換行時不顯示任何標記
