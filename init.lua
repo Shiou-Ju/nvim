@@ -487,6 +487,25 @@ require("lazy").setup({
         end, {})
       end
     }
+    ,
+      -- 添加 Live Server 功能插件
+    --       {
+    --   "barrett-ruth/live-server.nvim",
+    --   config = function()
+    --     require('live-server').setup({
+    --       -- 確保設置所有必須的選項
+    --       port = 8080,
+    --       browser_command = nil,  -- 使用系統默認瀏覽器
+    --       quiet = false,
+    --       no_css_inject = false,
+    --       root = nil,  -- 使用當前工作目錄
+    --       mount_path = "/",
+    --       -- 重要: 確保這些目錄存在
+    --       server_path = vim.fn.stdpath("data") .. "/live-server",
+    --       start_on_load = false,
+    --     })
+    --   end,
+    -- }
 })
 
 -- 解決 terminal 跟文件目錄不一致的問題
@@ -652,8 +671,162 @@ vim.cmd([[
 
 
 
+-- --  LiveServer 命令使用插件 API
+-- vim.api.nvim_create_user_command('LiveServer', function(opts)
+--   local port = opts.args ~= "" and tonumber(opts.args) or nil
+--   if port then
+--     require('live-server').start(port)
+--   else
+--     require('live-server').start()
+--   end
+-- end, { nargs = '?' })
+--
+-- -- 修改 LiveServerStop 命令使用插件 API
+-- vim.api.nvim_create_user_command('LiveServerStop', function()
+--   require('live-server').stop()
+-- end, {})
+--
 
 
+-- FIXME: 似乎無法執行哦
+-- 定義 Live Server 相關函數和狀態管理
+do
+  -- 用於保存 Live Server 作業 ID
+  local server_job_id = nil
+  local server_port = 8080
+
+  -- 啟動 Live Server
+  local function start_live_server(port)
+    -- 如果已有一個伺服器正在運行，先停止它
+    if server_job_id ~= nil then
+      vim.fn.jobstop(server_job_id)
+      server_job_id = nil
+      print("已停止舊的 Live Server")
+    end
+
+    -- 設置埠號
+    server_port = port or server_port
+
+    -- 獲取當前工作目錄
+    local cwd = vim.fn.getcwd()
+    
+    -- 判斷 node.js 環境
+    local live_server_cmd
+
+        
+    -- 初始化 nvm 環境
+    -- local init_env = 'source ~/.zshrc && nvm use default > /dev/null 2>&1 && '
+    -- 首先通過 yarn 觸發 nvm 載入
+    local init_env = 'source ~/.zshrc && yarn --version > /dev/null && '
+
+    
+    -- 檢查是否安裝了 npx
+    -- 檢查是否是全局安裝的 live-server
+    if vim.fn.executable('npx') == 1 then
+      live_server_cmd = init_env .. 'npx --yes live-server --port=' .. server_port
+    elseif vim.fn.executable('live-server') == 1 then
+      live_server_cmd = init_env .. 'live-server --port=' .. server_port
+    else
+      print("錯誤: 未找到 live-server。請先使用 npm install -g live-server 安裝。")
+      return false
+    end
+    
+    -- 啟動 live-server 作業
+    server_job_id = vim.fn.jobstart(live_server_cmd, {
+      cwd = cwd,
+      shell = '/bin/zsh',  -- 明確使用 zsh
+      on_exit = function(_, exit_code)
+        if exit_code ~= 0 then
+          print("Live Server 非正常退出，代碼: " .. exit_code)
+        end
+        server_job_id = nil
+      end,
+      on_stdout = function(_, data)
+        if data and #data > 0 then
+          for _, line in ipairs(data) do
+            if line and line ~= "" then
+              print("LiveServer: " .. line)
+            end
+          end
+        end
+      end,
+      on_stderr = function(_, data)
+        if data and #data > 0 then
+          for _, line in ipairs(data) do
+            if line and line ~= "" then
+              print("LiveServer 錯誤: " .. line)
+            end
+          end
+        end
+      end,
+      detach = 1  -- 讓作業在後台運行
+    })
+    
+    if server_job_id <= 0 then
+      print("無法啟動 Live Server")
+      server_job_id = nil
+      return false
+    end
+    
+    print("Live Server 已啟動 (埠:" .. server_port .. ")")
+    return true
+  end
+  
+  -- 停止 Live Server
+  local function stop_live_server()
+    if server_job_id ~= nil then
+      vim.fn.jobstop(server_job_id)
+      server_job_id = nil
+      print("Live Server 已停止")
+      return true
+    else
+      print("Live Server 未運行")
+      return false
+    end
+  end
+  
+  -- 檢查 Live Server 狀態
+  local function check_live_server_status()
+    if server_job_id ~= nil then
+      print("Live Server 正在運行 (埠:" .. server_port .. ")")
+      return true
+    else
+      print("Live Server 未運行")
+      return false
+    end
+  end
+  
+  -- 註冊命令
+  vim.api.nvim_create_user_command('LiveServer', function(opts)
+    local port = opts.args ~= "" and tonumber(opts.args) or 8080
+    if port then
+      start_live_server(port)
+    else
+      start_live_server(8080)
+    end
+  end, { nargs = '?', desc = '啟動 Live Server (可選指定埠號)' })
+
+  vim.api.nvim_create_user_command('LiveServerStop', function()
+    stop_live_server()
+  end, { desc = '停止 Live Server' })
+
+  vim.api.nvim_create_user_command('LiveServerStatus', function()
+    check_live_server_status()
+  end, { desc = '檢查 Live Server 狀態' })
+  
+  -- 可選：設置退出 Neovim 時自動關閉 Live Server
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+      if server_job_id ~= nil then
+        stop_live_server()
+      end
+    end
+  })
+  
+  -- 可選：設置快捷鍵
+  vim.keymap.set('n', '<leader>ls', ':LiveServer<CR>', { desc = '啟動 Live Server', silent = true })
+  vim.keymap.set('n', '<leader>lx', ':LiveServerStop<CR>', { desc = '停止 Live Server', silent = true })
+end
 
 
 
