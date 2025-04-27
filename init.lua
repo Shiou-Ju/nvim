@@ -22,12 +22,16 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- 全域折疊設定
-vim.opt.foldmethod = "indent"
 
 -- 確保檔案開啟時不會自動折疊所有內容
-vim.opt.foldenable = true
-vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
+-- vim.opt.foldenable = true
+-- vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
+-- 確保每次開啟檔案時都展開所有折疊
+-- vim.api.nvim_create_autocmd("BufReadPost", {
+--   callback = function()
+--     vim.cmd("normal! zR")  -- 展開所有折疊
+--   end
+-- })
 
 
 
@@ -734,9 +738,18 @@ vim.api.nvim_create_autocmd("FileType", {
     -- vim.opt_local.foldmethod = "syntax"  -- 使用語法摺疊
     vim.opt_local.foldmethod = "indent"  -- 改用縮排折疊
 
+    -- 每次載入 JSON 檔案時展開所有摺疊
+    vim.cmd("normal! zR")
+
     vim.opt_local.foldenable = true
   end
 })
+
+
+-- 全域折疊設定
+vim.opt.foldenable = true 
+vim.opt.foldmethod = "indent"
+vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
 
 
 
