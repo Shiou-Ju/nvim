@@ -241,6 +241,13 @@ end, { desc = 'VS Code 風格終端開關 (Ctrl+`)' , noremap = true})
         file_ignore_patterns = { "node_modules", "^.git/" }  -- 只忽略 .git 目錄，而非所有 .git 開頭的檔案
       })
     end, { desc = '搜尋檔案' })
+
+
+    -- find recent files
+    vim.keymap.set('n', '<leader>fr', function()
+      require('telescope.builtin').oldfiles()
+    end, { desc = '最近開啟的檔案' })
+
     
     vim.keymap.set('n', '<leader>fg', function()
       require('telescope.builtin').live_grep()
@@ -408,7 +415,22 @@ require("lazy").setup({
     config = function()
     local telescope = require("telescope")
     telescope.setup({
-      defaults = {
+    --   defaults = {
+    --     file_ignore_patterns = { "node_modules", ".git" },
+    --     mappings = {
+    --       i = {
+    --         ["<C-j>"] = "move_selection_next",
+    --         ["<C-k>"] = "move_selection_previous",
+    --       },
+    --     },
+    --   },
+    --   pickers = {
+    --     find_files = {
+    --       hidden = true  -- 這裡添加，使 find_files 能夠顯示隱藏檔案
+    --     }
+    --   }
+    -- })
+        defaults = {
         file_ignore_patterns = { "node_modules", ".git" },
         mappings = {
           i = {
@@ -416,13 +438,23 @@ require("lazy").setup({
             ["<C-k>"] = "move_selection_previous",
           },
         },
+        sorting_strategy = "ascending",  -- 使結果從上往下排列，類似 VS Code
+        layout_config = {
+          horizontal = {
+            prompt_position = "top",  -- 將提示放在頂部
+          },
+        },
       },
       pickers = {
+        oldfiles = {
+          prompt_title = "最近打開的檔案",  -- 自定義標題
+          sort_lastused = true,  -- 按最後使用時間排序
+        },
         find_files = {
           hidden = true  -- 這裡添加，使 find_files 能夠顯示隱藏檔案
         }
       }
-    })
+     })
   end,
 
   },
