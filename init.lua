@@ -758,6 +758,16 @@ vim.opt.foldenable = true
 vim.opt.foldmethod = "indent"
 vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
 
+-- 自動展開全部的
+-- vim.api.nvim_create_autocmd({"BufReadPost","BufNewFile"}, {
+--   callback = function() vim.cmd("normal! zR") end
+-- })
+--
+vim.api.nvim_create_autocmd({"BufReadPost","BufNewFile","BufEnter"}, {
+  callback = function() vim.cmd("normal! zR") end
+})
+
+
 
 
 
