@@ -232,8 +232,14 @@ end, { desc = 'VS Code 風格終端開關 (Ctrl+`)' , noremap = true})
 
 
     -- Telescope 快捷鍵設定
+    -- vim.keymap.set('n', '<leader>ff', function()
+    --   require('telescope.builtin').find_files()
+    -- end, { desc = '搜尋檔案' })
     vim.keymap.set('n', '<leader>ff', function()
-      require('telescope.builtin').find_files()
+      require('telescope.builtin').find_files({
+        hidden = true,  -- 顯示隱藏檔案
+        file_ignore_patterns = { "node_modules", "^.git/" }  -- 只忽略 .git 目錄，而非所有 .git 開頭的檔案
+      })
     end, { desc = '搜尋檔案' })
     
     vim.keymap.set('n', '<leader>fg', function()
