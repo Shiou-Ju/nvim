@@ -1,0 +1,21 @@
+
+# macOS
+.DS_Store
+
+# Neovim
+*.swp
+*.swo
+
+# Node.js / Yarn
+node_modules/
+.yarn/
+.pnp.*
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/
+
