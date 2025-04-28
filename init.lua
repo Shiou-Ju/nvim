@@ -669,6 +669,13 @@ end, {})
 -- 設定快捷鍵 <leader>nf 來觸發 NewFile 命令
 vim.keymap.set('n', '<leader>nf', ':NewFile<CR>', {desc = '新建檔案'})
 
+-- 使用 space y y 複製整行到系統剪貼簿
+vim.keymap.set('n', '<leader>yy', '"+yy', { desc = '複製整行到系統剪貼簿', noremap = true })
+-- 使用 space y w 複製單詞到系統剪貼簿
+vim.keymap.set('n', '<leader>yiw', '"+yiw', { desc = '複製單詞到系統剪貼簿', noremap = true })
+
+
+
 -- 註冊簡易版的新檔案創建命令 end
 
 
