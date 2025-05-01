@@ -678,11 +678,12 @@ vim.api.nvim_create_user_command('CdVimDirHere', function()
 end, {})
 
 
--- 在適當位置添加 Markdown 相關的快捷鍵配置
+-- 將所有 Markdown 相關設定整合到一個 autocmd 中
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
   callback = function()
-    -- glow.nvim：Vim 內預覽 (方案二)
+    -- 快捷鍵設定
+    -- glow.nvim：Vim 內預覽
     vim.keymap.set('n', '<leader>mp', ':Glow<CR>', { 
       desc = 'Markdown 內部預覽 (Glow)', 
       buffer = true, 
@@ -690,7 +691,7 @@ vim.api.nvim_create_autocmd("FileType", {
       silent = true 
     })
     
-    -- markdown-preview.nvim：瀏覽器預覽 (方案一)
+    -- markdown-preview.nvim：瀏覽器預覽
     vim.keymap.set('n', '<leader>mb', ':MarkdownPreviewToggle<CR>', { 
       desc = 'Markdown 瀏覽器預覽', 
       buffer = true, 
@@ -705,19 +706,9 @@ vim.api.nvim_create_autocmd("FileType", {
       noremap = true, 
       silent = true 
     })
-  end
-})
-
--- 為 Markdown 檔案設置特定選項
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "markdown",
-  callback = function()
-    -- 啟用自動格式化
-    vim.opt_local.formatoptions:append('r')  -- 插入模式下回車自動添加前導符號
-    vim.opt_local.formatoptions:append('o')  -- 普通模式下 o/O 自動添加前導符號
-    vim.opt_local.formatoptions:append('n')  -- 識別清單格式
-    vim.opt_local.formatoptions:append('j')  -- 在合適的時候刪除註解前導符
-    vim.opt_local.formatoptions:append('1')  -- 盡量不要在單字中間斷行
+    
+    -- 編輯器設定
+    vim.opt_local.formatoptions = "roj1n"  -- 設定所有格式化選項一次性
     
     -- 設定 Tab 為 2 個空格
     vim.opt_local.tabstop = 2
@@ -733,21 +724,34 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.relativenumber = true
     
     -- 設定自動遞增列表
-    vim.opt_local.autoindent = true           -- 自動縮排
-    vim.opt_local.smartindent = true          -- 智能縮排
-    
-    -- 啟用數字列表自動遞增的支援
-    vim.b.autoformat_bullets = 1              -- 啟用自動格式化子彈點和數字
-    vim.cmd([[
-      " 設定 formatlistpat 以識別更多類型的列表
-      setlocal formatlistpat=^\\s*\\d\\+\\.\\s\\+\\\|^\\s*[-*+]\\s\\+
+    vim.opt_local.autoindent = true
+    vim.opt_local.smartindent = true
+
+   -- TODO: 只有 enter 鍵有用，並且不支援 o , O等 
+   -- 添加數字列表快捷鍵
+    vim.keymap.set('i', '<CR>', function()
+      local line = vim.api.nvim_get_current_line()
+      local cursor_pos = vim.api.nvim_win_get_cursor(0)
+      local current_col = cursor_pos[2]
       
-      " 自動識別和遞增數字列表
-      setlocal comments+=n:1.
+      -- 檢查是否在數字列表項末尾
+      local list_match = line:match("^(%s*)(%d+)%.%s+(.*)")
+      if list_match and current_col >= #line then
+        local indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+        
+        -- 如果內容為空，退出列表模式
+        if content == "" then
+          return "<CR>"
+        end
+        
+        -- 否則創建新的列表項，數字+1
+        local next_num = tonumber(num) + 1
+        return "<CR>" .. indent .. next_num .. ". "
+      end
       
-      " 支援更多的 Markdown 清單格式
-      setlocal comments=b:*,b:+,b:-,b:1.
-    ]])
+      -- 正常行為
+      return "<CR>"
+    end, { expr = true, buffer = true })
   end
 })
 
