@@ -614,6 +614,44 @@ require("lazy").setup({
     --     })
     --   end,
     -- }
+    --
+    -- 在您現有的 lazy.nvim 插件列表中添加以下內容
+    {
+      -- glow.nvim: 在 Vim 內預覽 Markdown
+      "ellisonleao/glow.nvim",
+      ft = "markdown",
+      cmd = "Glow",
+      config = function()
+        require("glow").setup({
+          border = "rounded",       -- 圓角邊框
+          style = "dark",           -- 暗色主題
+          width = 120,              -- 預覽視窗寬度
+          height_ratio = 0.7,       -- 預覽視窗高度比例
+          pager = false,            -- 禁用分頁器
+        })
+      end
+    },
+    {
+      -- markdown-preview.nvim: 在瀏覽器中預覽 Markdown
+      "iamcco/markdown-preview.nvim",
+      ft = "markdown",
+      build = function()
+        -- 指定 Node.js 路徑
+        vim.g.mkdp_node_path = "/Users/bamboo/.nvm/versions/node/v20.16.0/bin/node"
+        vim.fn["mkdp#util#install"]()
+      end,
+      config = function()
+        vim.g.mkdp_node_path = "/Users/bamboo/.nvm/versions/node/v20.16.0/bin/node"
+        vim.g.mkdp_auto_start = 0         -- 不自動啟動預覽
+        vim.g.mkdp_auto_close = 1         -- 關閉 buffer 時自動關閉預覽
+        vim.g.mkdp_refresh_slow = 0       -- 即時刷新預覽
+        vim.g.mkdp_command_for_global = 0 -- 僅在 markdown 檔案中啟用命令
+        vim.g.mkdp_open_to_the_world = 0  -- 僅本地預覽
+        vim.g.mkdp_browser = ""           -- 使用默認瀏覽器
+        vim.g.mkdp_echo_preview_url = 1   -- 顯示預覽 URL
+        vim.g.mkdp_page_title = '「${name}」'  -- 預覽頁面標題格式
+      end,
+    }
 })
 
 -- 解決 terminal 跟文件目錄不一致的問題
@@ -638,6 +676,80 @@ vim.api.nvim_create_user_command('CdVimDirHere', function()
     print("當前不在終端緩衝區")
   end
 end, {})
+
+
+-- 在適當位置添加 Markdown 相關的快捷鍵配置
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    -- glow.nvim：Vim 內預覽 (方案二)
+    vim.keymap.set('n', '<leader>mp', ':Glow<CR>', { 
+      desc = 'Markdown 內部預覽 (Glow)', 
+      buffer = true, 
+      noremap = true, 
+      silent = true 
+    })
+    
+    -- markdown-preview.nvim：瀏覽器預覽 (方案一)
+    vim.keymap.set('n', '<leader>mb', ':MarkdownPreviewToggle<CR>', { 
+      desc = 'Markdown 瀏覽器預覽', 
+      buffer = true, 
+      noremap = true, 
+      silent = true 
+    })
+    
+    -- 停止瀏覽器預覽服務
+    vim.keymap.set('n', '<leader>ms', ':MarkdownPreviewStop<CR>', { 
+      desc = '停止 Markdown 預覽服務', 
+      buffer = true, 
+      noremap = true, 
+      silent = true 
+    })
+  end
+})
+
+-- 為 Markdown 檔案設置特定選項
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    -- 啟用自動格式化
+    vim.opt_local.formatoptions:append('r')  -- 插入模式下回車自動添加前導符號
+    vim.opt_local.formatoptions:append('o')  -- 普通模式下 o/O 自動添加前導符號
+    vim.opt_local.formatoptions:append('n')  -- 識別清單格式
+    vim.opt_local.formatoptions:append('j')  -- 在合適的時候刪除註解前導符
+    vim.opt_local.formatoptions:append('1')  -- 盡量不要在單字中間斷行
+    
+    -- 設定 Tab 為 2 個空格
+    vim.opt_local.tabstop = 2
+    vim.opt_local.shiftwidth = 2
+    vim.opt_local.expandtab = true
+
+    -- 設定軟換行
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+    
+    -- 顯示行號
+    vim.opt_local.number = true
+    vim.opt_local.relativenumber = true
+    
+    -- 設定自動遞增列表
+    vim.opt_local.autoindent = true           -- 自動縮排
+    vim.opt_local.smartindent = true          -- 智能縮排
+    
+    -- 啟用數字列表自動遞增的支援
+    vim.b.autoformat_bullets = 1              -- 啟用自動格式化子彈點和數字
+    vim.cmd([[
+      " 設定 formatlistpat 以識別更多類型的列表
+      setlocal formatlistpat=^\\s*\\d\\+\\.\\s\\+\\\|^\\s*[-*+]\\s\\+
+      
+      " 自動識別和遞增數字列表
+      setlocal comments+=n:1.
+      
+      " 支援更多的 Markdown 清單格式
+      setlocal comments=b:*,b:+,b:-,b:1.
+    ]])
+  end
+})
 
 
 -- 只為普通模式設定快捷鍵
@@ -712,6 +824,8 @@ vim.keymap.set('n', '<leader>yy', '"+yy', { desc = '複製整行到系統剪貼�
 -- 使用 space y w 複製單詞到系統剪貼簿
 vim.keymap.set('n', '<leader>yiw', '"+yiw', { desc = '複製單詞到系統剪貼簿', noremap = true })
 
+-- 使用 space-w 儲存檔案 (更簡潔的替代方案)
+vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = '儲存檔案', noremap = true })
 
 
 -- 註冊簡易版的新檔案創建命令 end
