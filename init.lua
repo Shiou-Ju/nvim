@@ -841,6 +841,28 @@ vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = '儲存檔案', noremap = tr
 
 -- 註冊簡易版的新檔案創建命令 end
 
+-- 選取目前 code block in md 內容
+vim.keymap.set('n', '<leader>vc', function()
+  -- 查找代碼塊的開始位置（向上搜索）
+  local start_line = vim.fn.search('```', 'bnW')
+  if start_line == 0 then
+    print("找不到代碼塊開始標記")
+    return
+  end
+  
+  -- 查找代碼塊的結束位置（向下搜索）
+  local end_line = vim.fn.search('```', 'nW')
+  if end_line == 0 then
+    print("找不到代碼塊結束標記")
+    return
+  end
+  
+  -- 選取代碼塊內容（不包括開始和結束標記）
+  vim.cmd(string.format('normal! %dGj', start_line))
+  vim.cmd('normal! V')
+  vim.cmd(string.format('normal! %dGk', end_line))
+end, { desc = '選取當前代碼塊內容' })
+
 
 
 
