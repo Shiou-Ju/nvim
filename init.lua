@@ -44,6 +44,8 @@ if vim.g.vscode then
 else
     vim.opt.relativenumber = true
     vim.keymap.set('i', 'jj', '<Esc>')
+    vim.keymap.set('i', 'jk', '<Esc>')
+    vim.keymap.set('i', 'kj', '<Esc>')
     -- vim.keymap.set('n', 'zc', ':foldclose<CR>')
     -- vim.keymap.set('n', 'zo', ':foldopen<CR>')
     -- 導航切換視窗 
