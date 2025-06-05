@@ -937,6 +937,20 @@ vim.api.nvim_create_autocmd("FileType", {
   end
 })
 
+-- 為 TypeScript 檔案單獨設定摺疊方法
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = {"typescript", "typescriptreact"},
+  callback = function()
+    vim.opt_local.foldmethod = "indent"  -- 使用縮排方式摺疊
+    vim.opt_local.foldenable = true      -- 啟用摺疊
+    vim.cmd("normal! zR")  -- 展開所有折疊
+    -- 確保延遲執行展開指令，以防止某些情況下未正確展開
+    vim.defer_fn(function()
+      vim.cmd("normal! zR")
+    end, 50)  -- 50毫秒後再次展開
+  end
+})
+
 
 -- 全域折疊設定
 vim.opt.foldenable = true 
