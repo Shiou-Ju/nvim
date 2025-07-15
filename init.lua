@@ -55,7 +55,19 @@ else
     vim.keymap.set('n', '<leader>k', '<C-w>k', { desc = '向上切換視窗' })
     vim.keymap.set('n', '<leader>l', '<C-w>l', { desc = '向右切換視窗' })
     -- 專門處理 terminal 的視窗
-    vim.keymap.set('t', 'JKL', '<C-\\><C-n>', { desc = '使用 JKL 退出終端模式' })
+    -- vim.keymap.set('t', 'JKL', '<C-\\><C-n>', { desc = '使用 JKL 退出終端模式' })
+
+    -- vim.keymap.set({'i', 't'}, 'JKL', '<C-\\><C-n>', { desc = '使用 JKL 退出插入模式和終端模式' })
+
+    vim.keymap.set({'i', 't'}, 'JKL', function()
+      if vim.fn.mode() == 't' then
+        return '<C-\\><C-n>'
+      else
+        return '<Esc>'
+      end
+    end, { expr = true, desc = '使用 JKL 退出插入模式和終端模式' })
+
+
     -- vim.keymap.set('t', 'hjkl', '<C-\\><C-n>', { desc = '使用 hjkl 退出終端模式' })
    
     
