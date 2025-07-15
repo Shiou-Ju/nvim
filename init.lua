@@ -737,6 +737,7 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.autoindent = true
     vim.opt_local.smartindent = true
 
+
    -- TODO: 只有 enter 鍵有用，並且不支援 o , O等 
    -- 添加數字列表快捷鍵
     vim.keymap.set('i', '<CR>', function()
@@ -907,6 +908,29 @@ vim.opt.listchars = ""  -- 清空所有特殊字符的顯示符號
 vim.opt.ignorecase = true  -- 不區分大小寫
 -- 上面那個要打開，下面才會生效
 vim.opt.smartcase = true   -- 如果包含大寫字母，則自動切換為區分大小寫
+
+
+-- 設定 terminal scrollback 為 50 萬行
+-- vim.opt.scrollback = 500000  
+-- 在 terminal 創建時設定
+-- vim.api.nvim_create_autocmd("TermOpen", {
+--   callback = function()
+--     vim.bo.scrollback = 500000  -- 改用 vim.bo
+--   end
+-- })
+vim.api.nvim_create_autocmd("TermOpen", {
+  callback = function()
+    -- 檢查 scrollback 選項是否存在
+    if vim.fn.exists('&scrollback') == 1 then
+      -- vim.cmd("setlocal scrollback=500000")
+      vim.cmd("setlocal scrollback=10000")  -- 改成 1 萬行
+    else
+      -- 如果不存在，使用其他方法或忽略
+      print("scrollback option not available")
+    end
+  end
+})
+
 
 
 ---- 設定 indent
