@@ -286,3 +286,6 @@ end
 - **完整評論檢視**：查看 Issue 時必須使用 `gh issue view [NUMBER] --comments` 確保看到所有留言
 - **避免 HTTP 方式**：自有倉庫避免使用 WebFetch 或 HTTP 方式存取 GitHub 內容
 - **僅例外情況**：非自有倉庫才考慮使用 HTTP 方式查看
+- **Commit 連結格式**：commit hash 與其他符號之間必須有空格，確保 GitHub 能正確產生連結
+  - ✅ 正確：`Commit: ba864a6` 或 `實作 commit: ba864a6`
+  - ❌ 錯誤：`Commit:ba864a6` 或 `commit:ba864a6`（缺少空格）
