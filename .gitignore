@@ -19,3 +19,6 @@ logs/
 dist/
 build/
 
+# Claude Code settings (local only)
+.claude/
+
