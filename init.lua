@@ -568,7 +568,21 @@ require("lazy").setup({
       end
     })
   end
-} ,
+},
+  -- Git 進階操作插件
+  {
+    "tpope/vim-fugitive",
+    config = function()
+      -- 完整的 Git diff 快捷鍵配置
+      vim.keymap.set('n', '<leader>gd', ':Gvdiffsplit<CR>', { desc = '工作目錄 vs 暫存區' })
+      vim.keymap.set('n', '<leader>gD', ':Gvdiffsplit HEAD<CR>', { desc = '工作目錄 vs HEAD' })
+      vim.keymap.set('n', '<leader>gS', ':Gvdiffsplit :0<CR>', { desc = '暫存區 vs HEAD' })
+      -- Git blame
+      vim.keymap.set('n', '<leader>gb', ':Git blame<CR>', { desc = 'Git blame' })
+      -- Git log
+      vim.keymap.set('n', '<leader>gl', ':Git log --oneline<CR>', { desc = 'Git log' })
+    end
+  },
     -- markdownlint into vim
     {
       "mfussenegger/nvim-lint",
