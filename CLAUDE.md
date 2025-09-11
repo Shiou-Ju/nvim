@@ -264,3 +264,11 @@ end
 - Markdown 數字列表自動遞增
 - 終端回滾行數優化
 - TypeScript 專用折疊配置
+
+## Git 工作流程規範
+
+### Commit 和 PR 規範
+- **禁止 Claude 署名**：絕對不要在 commit 訊息或 PR 中加入任何 Claude 相關的署名或標記
+- **禁止內容**：避免包含 "Claude"、"Co-Authored-By: Claude"、"Generated with Claude Code"、"一起製作" 等字眼
+- **原因**：保持開發歷史的專業性和真實性，所有貢獻都應歸屬於實際的開發者
+- **正確做法**：使用純粹的技術描述和功能說明
