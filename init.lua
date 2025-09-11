@@ -125,6 +125,9 @@ else
 
     -- +y 是複製到系統的剪貼簿
     vim.keymap.set('v', '<leader>y', '"+y', { desc = '複製到系統剪貼簿', noremap = true })
+    
+    -- +x 是剪下到系統的剪貼簿
+    vim.keymap.set('v', '<leader>x', '"+x', { desc = '剪下到系統剪貼簿', noremap = true })
 
 
 
@@ -850,6 +853,11 @@ vim.keymap.set('n', '<leader>nf', ':NewFile<CR>', {desc = '新建檔案'})
 vim.keymap.set('n', '<leader>yy', '"+yy', { desc = '複製整行到系統剪貼簿', noremap = true })
 -- 使用 space y w 複製單詞到系統剪貼簿
 vim.keymap.set('n', '<leader>yiw', '"+yiw', { desc = '複製單詞到系統剪貼簿', noremap = true })
+
+-- 使用 space x x 剪下整行到系統剪貼簿
+vim.keymap.set('n', '<leader>xx', '"+dd', { desc = '剪下整行到系統剪貼簿', noremap = true })
+-- 使用 space x i w 剪下單詞到系統剪貼簿
+vim.keymap.set('n', '<leader>xiw', '"+diw', { desc = '剪下單詞到系統剪貼簿', noremap = true })
 
 -- 使用 space-w 儲存檔案 (更簡潔的替代方案)
 vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = '儲存檔案', noremap = true })
