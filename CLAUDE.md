@@ -59,7 +59,8 @@ vim.g.mapleader = " "  -- 空格鍵作為領導鍵
 
 ### 終端整合
 ```lua
-<C-`>       -- VS Code 風格終端開關
+<C-`>       -- VS Code 風格終端開關（在 tmux 外使用）
+<leader>tt  -- tmux 相容終端切換（space tt，所有環境皆可用）
 <leader>cd  -- 同步 Neovim 工作目錄與終端目錄（CdVimDirHere）
 ```
 
@@ -234,6 +235,7 @@ end
 2. **Markdown 預覽失效**：確認 Node.js 路徑配置
 3. **中文顯示異常**：檢查 `ambiwidth` 設定
 4. **終端導航失效**：確認是否在終端模式中使用正確快捷鍵
+5. **tmux 中 Ctrl+` 無法使用**：改用 `<leader>tt` (space tt) 終端切換
 
 ### 調試技巧
 - 使用 `:checkhealth` 檢查插件狀態

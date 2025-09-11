@@ -149,8 +149,8 @@ else
     )
 
 -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 do
--- vim.keymap.set({'n', 'i'}, '<C-`>', function()
-vim.keymap.set({'n', 'i', 't'}, '<C-`>', function()
+-- 提取終端切換邏輯為共用函數
+local function toggle_terminal()
   -- 如果在終端模式，先退出到普通模式
   if vim.api.nvim_get_mode().mode == 't' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, true, true), 'n', false)
@@ -176,27 +176,23 @@ vim.keymap.set({'n', 'i', 't'}, '<C-`>', function()
     end
   end
   
--- 如果找到顯示終端的視窗，關閉它
-  -- if term_win ~= nil then
-  --   vim.api.nvim_win_close(term_win, false)
-  --   return
-  -- end
-if term_win ~= nil then
-  -- 檢查當前視窗是否就是終端視窗
-  local current_win = vim.api.nvim_get_current_win()
-  if current_win == term_win then
-    -- 如果當前已在終端視窗，則關閉它
-    vim.api.nvim_win_close(term_win, false)
-  else
-    -- 如果終端視窗已開啟但不是當前視窗，則切換焦點到終端視窗
-    vim.api.nvim_set_current_win(term_win)
-    -- 如果是從非終端模式切換過來，自動進入插入模式
-    if vim.api.nvim_get_mode().mode ~= 't' then
-      vim.cmd('startinsert')
+  -- 如果找到顯示終端的視窗，處理切換邏輯
+  if term_win ~= nil then
+    -- 檢查當前視窗是否就是終端視窗
+    local current_win = vim.api.nvim_get_current_win()
+    if current_win == term_win then
+      -- 如果當前已在終端視窗，則關閉它
+      vim.api.nvim_win_close(term_win, false)
+    else
+      -- 如果終端視窗已開啟但不是當前視窗，則切換焦點到終端視窗
+      vim.api.nvim_set_current_win(term_win)
+      -- 如果是從非終端模式切換過來，自動進入插入模式
+      if vim.api.nvim_get_mode().mode ~= 't' then
+        vim.cmd('startinsert')
+      end
     end
+    return
   end
-  return
-end
   
   -- 如果沒有顯示終端的視窗，則開啟/創建終端
   if #term_buffers > 0 then
@@ -214,38 +210,13 @@ end
     vim.cmd('terminal')
     vim.cmd('startinsert')
   end
-  -- if #term_buffers > 0 then
-  --   -- 如果已有終端，切換到第一個終端緩衝區
-  --   local windows = vim.api.nvim_list_wins()
-  --   local term_found = false
-  --
-  --   -- 先檢查是否有顯示終端的視窗
-  --   for _, win in ipairs(windows) do
-  --     local buf = vim.api.nvim_win_get_buf(win)
-  --     if vim.bo[buf].buftype == 'terminal' then
-  --       vim.api.nvim_set_current_win(win)
-  --       term_found = true
-  --       break
-  --     end
-  --   end
-  --
-  --   -- 如果沒有顯示終端的視窗，開啟一個新的底部終端視窗
-  --   if not term_found then
-  --     vim.cmd('split')
-  --     vim.cmd('wincmd J')  -- 將視窗移到最底部
-  --     vim.cmd('resize 23%')
-  --     vim.cmd('buffer ' .. term_buffers[1])
-  --     vim.cmd('startinsert')
-  --   end
-  -- else
-  --   -- 如果沒有終端，創建一個新的底部終端
-  --   vim.cmd('split')
-  --   vim.cmd('wincmd J')  -- 將視窗移到最底部
-  --   vim.cmd('resize 23%')
-  --   vim.cmd('terminal')
-  --   vim.cmd('startinsert')
-  -- end
-end, { desc = 'VS Code 風格終端開關 (Ctrl+`)' , noremap = true})
+end
+
+-- 原有的 Ctrl+` 快捷鍵映射（保持向後相容）
+vim.keymap.set({'n', 'i', 't'}, '<C-`>', toggle_terminal, { desc = 'VS Code 風格終端開關 (Ctrl+`)' , noremap = true})
+
+-- 新增 <leader>tt 作為 tmux 相容的終端切換快捷鍵
+vim.keymap.set({'n', 'i', 't'}, '<leader>tt', toggle_terminal, { desc = 'tmux 相容終端切換 (space tt)' , noremap = true})
     -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 end
 
 
