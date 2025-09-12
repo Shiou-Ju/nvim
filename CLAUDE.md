@@ -78,6 +78,20 @@ vim.g.mapleader = " "  -- 空格鍵作為領導鍵
 <leader>w    -- 快速儲存檔案
 ```
 
+### Git 進階操作
+```lua
+-- vim-fugitive 左右對照 diff
+<leader>gd   -- 工作目錄 vs 暫存區（查看未 staged 變更）
+<leader>gD   -- 工作目錄 vs HEAD（查看所有變更）
+<leader>gS   -- 暫存區 vs HEAD（查看將要 commit 的變更）
+<leader>gb   -- Git blame
+<leader>gl   -- Git log
+-- gitsigns 快捷鍵（注意：<leader>gd 被 fugitive 覆蓋）
+<leader>gs   -- 暫存變更（gitsigns）
+<leader>gr   -- 復原變更（gitsigns）
+]c / [c      -- 導航變更（gitsigns）
+```
+
 ### Markdown 專用功能
 ```lua
 -- 快捷鍵（僅在 Markdown 檔案中生效）
