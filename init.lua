@@ -264,6 +264,58 @@ vim.opt.termguicolors = true  -- 啟用終端真彩色支援
 vim.cmd('syntax enable')      -- 啟用語法高亮
 vim.cmd('filetype plugin indent on')  -- 啟用檔案類型偵測
 
+-- Git diff 面板標題改善設定
+-- 設定預設 statusline 顯示 Git 分支
+vim.opt.statusline = '%<%f %h%m%r%{FugitiveStatusline()}%=%-14.(%l,%c%V%) %P'
+
+-- 自動為 Git diff 面板加上清楚的標題 - 使用更可靠的事件組合
+vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter", "WinEnter"}, {
+  pattern = "*",
+  callback = function()
+    -- 延遲執行以確保 buffer 完全載入
+    vim.defer_fn(function()
+      local bufname = vim.api.nvim_buf_get_name(0)
+      
+      -- Debug 輸出（可查看實際 buffer 路徑格式）
+      if bufname:match("fugitive://") then
+        print("Fugitive Buffer: " .. bufname)
+      end
+      
+      if bufname:match("fugitive://") then
+        -- 更精確的匹配：檢查 .git 後面的部分
+        if bufname:match("%.git//0/") then
+          -- 確定是 Index (暫存區)
+          vim.wo.statusline = "[STAGED] %f %=%l,%c %P"
+          
+        elseif bufname:match("%.git//HEAD/") or bufname:match("%.git//[a-f0-9]+/") then
+          -- HEAD 或 commit SHA
+          vim.wo.statusline = "[LAST COMMIT] %f %=%l,%c %P"
+          
+        elseif bufname:match("%.git//1/") then
+          -- Merge conflict: 共同祖先
+          vim.wo.statusline = "[BASE] %f %=%l,%c %P"
+          
+        elseif bufname:match("%.git//2/") then
+          -- Merge conflict: 我們的版本
+          vim.wo.statusline = "[OURS] %f %=%l,%c %P"
+          
+        elseif bufname:match("%.git//3/") then
+          -- Merge conflict: 他們的版本
+          vim.wo.statusline = "[THEIRS] %f %=%l,%c %P"
+          
+        else
+          -- 其他 fugitive buffer
+          vim.wo.statusline = "[GIT] %f %=%l,%c %P"
+        end
+        
+      elseif vim.wo.diff and vim.bo.buftype == "" then
+        -- 如果不是 fugitive buffer 但在 diff 模式，就是 Working File
+        vim.wo.statusline = "[WORKING FILE] %f %=%l,%c %P"
+      end
+    end, 50)  -- 延遲 50ms 執行
+  end
+})
+
 -- 載入插件
 require("lazy").setup({
     -- nvim-surround 插件
@@ -1168,6 +1220,7 @@ do
   vim.keymap.set('n', '<leader>ls', ':LiveServer<CR>', { desc = '啟動 Live Server', silent = true })
   vim.keymap.set('n', '<leader>lx', ':LiveServerStop<CR>', { desc = '停止 Live Server', silent = true })
 end
+
 
 
 
