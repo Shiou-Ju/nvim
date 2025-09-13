@@ -436,6 +436,12 @@ require("lazy").setup({
 		    -- 設定註解的顏色（無斜體但顏色更鮮明）
 		    vim.api.nvim_set_hl(0, "Comment", { fg = "#7a88cf", italic = false })
 		    vim.api.nvim_set_hl(0, "gitcommitComment", { fg = "#7a88cf", italic = false })
+		    
+		    -- 增強 Git diff 顏色對比 (Issue #18)
+		    vim.api.nvim_set_hl(0, "DiffAdd", { bg = "#1a4a1a", fg = "#7dcfff" })
+		    vim.api.nvim_set_hl(0, "DiffDelete", { bg = "#4a1a1a", fg = "#f7768e" })
+		    vim.api.nvim_set_hl(0, "DiffChange", { bg = "#1a1a4a", fg = "#e0af68" })
+		    vim.api.nvim_set_hl(0, "DiffText", { bg = "#4a4a1a", fg = "#bb9af7" })
 		  end
 		})
 	  end,
@@ -1225,6 +1231,9 @@ end
 
 
 
+
+
+ 
 
 
 
