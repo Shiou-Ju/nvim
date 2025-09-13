@@ -814,27 +814,30 @@ vim.api.nvim_create_autocmd("FileType", {
    -- TODO: 只有 enter 鍵有用，並且不支援 o , O等 
    -- 智能數字列表自動編號功能
    
-   -- 找到列表邊界的輔助函數
-   local function find_list_boundaries(cursor_line, indent_pattern)
+   -- 找到完整列表邊界的輔助函數
+   local function find_complete_list_boundaries(cursor_line, indent)
      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
      local start_line, end_line = cursor_line, cursor_line
+     local indent_pattern = indent:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1")
      
      -- 向上搜尋列表開始
      for i = cursor_line - 1, 1, -1 do
        local line = lines[i]
        if line:match("^" .. indent_pattern .. "%d+%.%s+") then
          start_line = i
-       else
+       elseif not line:match("^%s*$") then
+         -- 遇到非空行且非列表項就停止
          break
        end
      end
      
-     -- 向下搜尋列表結束  
+     -- 向下搜尋列表結束
      for i = cursor_line + 1, #lines do
        local line = lines[i]
        if line:match("^" .. indent_pattern .. "%d+%.%s+") then
          end_line = i
-       else
+       elseif not line:match("^%s*$") then
+         -- 遇到非空行且非列表項就停止
          break
        end
      end
@@ -871,6 +874,38 @@ vim.api.nvim_create_autocmd("FileType", {
      end
    end
    
+   -- 重新編號整個列表（方案 C）
+   local function renumber_entire_list()
+     local cursor_pos = vim.api.nvim_win_get_cursor(0)
+     local current_line = vim.api.nvim_get_current_line()
+     
+     -- 檢查當前行是否在數字列表中
+     local indent, num, content = current_line:match("^(%s*)(%d+)%.%s+(.*)")
+     if not indent then
+       vim.notify("游標不在數字列表項上", vim.log.levels.WARN)
+       return
+     end
+     
+     -- 找到整個列表的邊界
+     local start_line, end_line = find_complete_list_boundaries(cursor_pos[1], indent)
+     
+     -- 重新編號整個列表
+     local counter = 1
+     for i = start_line, end_line do
+       local line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1]
+       if not line then break end
+       
+       local current_indent, old_num, line_content = line:match("^(%s*)(%d+)%.%s+(.*)")
+       if current_indent == indent then
+         local new_line = indent .. counter .. ". " .. line_content
+         vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
+         counter = counter + 1
+       end
+     end
+     
+     vim.notify("已重新編號 " .. (counter - 1) .. " 個列表項", vim.log.levels.INFO)
+   end
+   
    -- 添加數字列表快捷鍵
     vim.keymap.set('i', '<CR>', function()
       local line = vim.api.nvim_get_current_line()
@@ -903,6 +938,14 @@ vim.api.nvim_create_autocmd("FileType", {
       -- 正常行為
       return "<CR>"
     end, { expr = true, buffer = true })
+    
+    -- 添加手動重新編號快捷鍵（方案 B）
+    vim.keymap.set('n', '<leader>rn', renumber_entire_list, {
+      desc = '重新編號當前數字列表',
+      buffer = true,
+      noremap = true,
+      silent = true
+    })
   end
 })
 
