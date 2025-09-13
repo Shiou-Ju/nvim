@@ -842,17 +842,31 @@ vim.api.nvim_create_autocmd("FileType", {
      return start_line, end_line
    end
    
-   -- 重新編號列表區塊
-   local function renumber_list_block(start_line, end_line, indent)
-     local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+   -- 重新編號列表區塊（從插入點後開始）
+   local function renumber_list_from_insertion(insertion_line, indent)
+     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
      local counter = 1
      
-     for i, line in ipairs(lines) do
+     -- 先找到插入點之前的最後一個數字
+     for i = 1, insertion_line - 1 do
+       local line = lines[i]
+       local current_indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+       if current_indent == indent then
+         counter = tonumber(num) + 1
+       end
+     end
+     
+     -- 從插入點開始重新編號
+     for i = insertion_line, #lines do
+       local line = lines[i]
        local current_indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
        if current_indent == indent then
          local new_line = indent .. counter .. ". " .. content
-         vim.api.nvim_buf_set_lines(0, start_line - 1 + i - 1, start_line - 1 + i, false, {new_line})
+         vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
          counter = counter + 1
+       elseif not line:match("^%s*$") and not line:match("^" .. indent) then
+         -- 遇到不同縮排或非空行就停止
+         break
        end
      end
    end
@@ -880,11 +894,7 @@ vim.api.nvim_create_autocmd("FileType", {
         
         -- 延遲執行重新編號，讓新行先插入
         vim.defer_fn(function()
-          local indent_pattern = indent:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1")
-          local start_line, end_line = find_list_boundaries(current_line_num + 1, indent_pattern)
-          if end_line > current_line_num + 1 then
-            renumber_list_block(current_line_num + 1, end_line, indent)
-          end
+          renumber_list_from_insertion(current_line_num + 2, indent)
         end, 10)
         
         return new_item
