@@ -386,14 +386,7 @@ require("lazy").setup({
           },
           -- 刪除線 (Strikethrough)
              ["S"] = {
-            add = function()
-              -- 檢查是否在 Visual Line 模式 (V)
-              if vim.fn.mode() == "V" then
-                return { "~~", "~~\n" }  -- 在行尾前添加結束標記
-              else
-                return { "~~", "~~" }  -- 正常情況
-              end
-            end,
+            add = { "~~", "~~" },
             find = function()
               return require("nvim-surround.config").get_selection({ pattern = "~~.-~~" })
             end,
