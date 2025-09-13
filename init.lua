@@ -215,8 +215,9 @@ end
 -- 原有的 Ctrl+` 快捷鍵映射（保持向後相容）
 vim.keymap.set({'n', 'i', 't'}, '<C-`>', toggle_terminal, { desc = 'VS Code 風格終端開關 (Ctrl+`)' , noremap = true})
 
--- 新增 <leader>tt 作為 tmux 相容的終端切換快捷鍵
-vim.keymap.set({'n', 'i', 't'}, '<leader>tt', toggle_terminal, { desc = 'tmux 相容終端切換 (space tt)' , noremap = true})
+-- 新增 <leader>tt 作為 tmux 相容的終端切換快捷鍵（移除 Insert 模式避免輸入延遲）
+-- TODO: 思考是否需要 n 或是改用其他的
+vim.keymap.set({'n'}, '<leader>tt', toggle_terminal, { desc = 'tmux 相容終端切換 (space tt)' , noremap = true})
     -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 end
 
 
@@ -1220,6 +1221,12 @@ do
   vim.keymap.set('n', '<leader>ls', ':LiveServer<CR>', { desc = '啟動 Live Server', silent = true })
   vim.keymap.set('n', '<leader>lx', ':LiveServerStop<CR>', { desc = '停止 Live Server', silent = true })
 end
+
+
+
+
+
+
 
 
 
