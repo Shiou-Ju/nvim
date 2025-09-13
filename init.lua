@@ -812,11 +812,57 @@ vim.api.nvim_create_autocmd("FileType", {
 
 
    -- TODO: 只有 enter 鍵有用，並且不支援 o , O等 
+   -- 智能數字列表自動編號功能
+   
+   -- 找到列表邊界的輔助函數
+   local function find_list_boundaries(cursor_line, indent_pattern)
+     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+     local start_line, end_line = cursor_line, cursor_line
+     
+     -- 向上搜尋列表開始
+     for i = cursor_line - 1, 1, -1 do
+       local line = lines[i]
+       if line:match("^" .. indent_pattern .. "%d+%.%s+") then
+         start_line = i
+       else
+         break
+       end
+     end
+     
+     -- 向下搜尋列表結束  
+     for i = cursor_line + 1, #lines do
+       local line = lines[i]
+       if line:match("^" .. indent_pattern .. "%d+%.%s+") then
+         end_line = i
+       else
+         break
+       end
+     end
+     
+     return start_line, end_line
+   end
+   
+   -- 重新編號列表區塊
+   local function renumber_list_block(start_line, end_line, indent)
+     local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+     local counter = 1
+     
+     for i, line in ipairs(lines) do
+       local current_indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+       if current_indent == indent then
+         local new_line = indent .. counter .. ". " .. content
+         vim.api.nvim_buf_set_lines(0, start_line - 1 + i - 1, start_line - 1 + i, false, {new_line})
+         counter = counter + 1
+       end
+     end
+   end
+   
    -- 添加數字列表快捷鍵
     vim.keymap.set('i', '<CR>', function()
       local line = vim.api.nvim_get_current_line()
       local cursor_pos = vim.api.nvim_win_get_cursor(0)
       local current_col = cursor_pos[2]
+      local current_line_num = cursor_pos[1]
       
       -- 檢查是否在數字列表項末尾
       local list_match = line:match("^(%s*)(%d+)%.%s+(.*)")
@@ -828,9 +874,20 @@ vim.api.nvim_create_autocmd("FileType", {
           return "<CR>"
         end
         
-        -- 否則創建新的列表項，數字+1
+        -- 插入新列表項
         local next_num = tonumber(num) + 1
-        return "<CR>" .. indent .. next_num .. ". "
+        local new_item = "<CR>" .. indent .. next_num .. ". "
+        
+        -- 延遲執行重新編號，讓新行先插入
+        vim.defer_fn(function()
+          local indent_pattern = indent:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1")
+          local start_line, end_line = find_list_boundaries(current_line_num + 1, indent_pattern)
+          if end_line > current_line_num + 1 then
+            renumber_list_block(current_line_num + 1, end_line, indent)
+          end
+        end, 10)
+        
+        return new_item
       end
       
       -- 正常行為
