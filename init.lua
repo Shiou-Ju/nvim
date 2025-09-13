@@ -385,13 +385,27 @@ require("lazy").setup({
             end,
           },
           -- 刪除線 (Strikethrough)
+          -- 注意：受 nvim-surround 架構限制，單行 Visual Line 仍會強制上下行加入
+          -- 詳見 Issue #22，此為嘗試性實作
              ["S"] = {
             add = function()
-              -- 檢查是否在 Visual Line 模式 (V)
-              if vim.fn.mode() == "V" then
-                return { "~~", "~~\n" }  -- 在行尾前添加結束標記
+              local mode = vim.fn.visualmode()
+              
+              if mode == "V" then
+                -- Visual Line 模式：檢查是否為單行
+                local first_line = vim.fn.line("'<")
+                local last_line = vim.fn.line("'>")
+                
+                if first_line == last_line then
+                  -- 單行 Visual Line：期望左右加入（目前受限制無效）
+                  return { "~~", "~~" }
+                else
+                  -- 多行 Visual Line：回歸原生跨行邏輯（有效）
+                  return nil
+                end
               else
-                return { "~~", "~~" }  -- 正常情況
+                -- 字符模式：正常處理（有效）
+                return { "~~", "~~" }
               end
             end,
             find = function()
