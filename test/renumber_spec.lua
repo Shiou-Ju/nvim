@@ -120,4 +120,60 @@ describe("數字列表重新編號", function()
       assert.are.equal("3. 第三項", result[4])
     end)
   end)
+
+  describe("renumber_list_from_insertion", function()
+    it("應該重新編號插入點後的列表項", function()
+      local input = {
+        "1. 第一項",
+        "2. 第二項",
+        "3. [新插入]",
+        "3. 第三項",
+        "4. 第四項"
+      }
+
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, input)
+
+      -- 從第4行（第三項）開始重新編號
+      renumber.renumber_list_from_insertion(4, "")
+
+      local result = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+      -- 前面不變
+      assert.are.equal("1. 第一項", result[1])
+      assert.are.equal("2. 第二項", result[2])
+      assert.are.equal("3. [新插入]", result[3])
+
+      -- 插入點後重新編號
+      assert.are.equal("4. 第三項", result[4])
+      assert.are.equal("5. 第四項", result[5])
+    end)
+
+    it("應該處理縮排列表的插入", function()
+      local input = {
+        "1. 主項目",
+        "  1. 子項目一",
+        "  2. [新插入]",
+        "  2. 子項目二",
+        "  3. 子項目三"
+      }
+
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, input)
+
+      -- 從第4行開始重新編號子列表
+      renumber.renumber_list_from_insertion(4, "  ")
+
+      local result = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+      -- 主列表不變
+      assert.are.equal("1. 主項目", result[1])
+
+      -- 子列表前面不變
+      assert.are.equal("  1. 子項目一", result[2])
+      assert.are.equal("  2. [新插入]", result[3])
+
+      -- 插入點後的子列表重新編號
+      assert.are.equal("  3. 子項目二", result[4])
+      assert.are.equal("  4. 子項目三", result[5])
+    end)
+  end)
 end)

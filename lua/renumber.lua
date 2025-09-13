@@ -77,6 +77,35 @@ M.renumber_entire_list = function()
   vim.notify("完成重新編號：處理 " .. processed_count .. " 個列表項", vim.log.levels.INFO)
 end
 
+-- 重新編號列表區塊（從插入點後開始）- 用於 Enter 鍵自動編號
+M.renumber_list_from_insertion = function(insertion_line, indent)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local counter = 1
+
+  -- 先找到插入點之前的最後一個數字
+  for i = 1, insertion_line - 1 do
+    local line = lines[i]
+    local current_indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+    if current_indent == indent then
+      counter = tonumber(num) + 1
+    end
+  end
+
+  -- 從插入點開始重新編號
+  for i = insertion_line, #lines do
+    local line = lines[i]
+    local current_indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+    if current_indent == indent then
+      local new_line = indent .. counter .. ". " .. content
+      vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
+      counter = counter + 1
+    elseif not line:match("^%s*$") and not line:match("^" .. indent) then
+      -- 遇到不同縮排或非空行就停止
+      break
+    end
+  end
+end
+
 -- 重新編號整個章節範圍（支援嵌套列表）
 M.renumber_section = function(start_line, end_line)
   local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)

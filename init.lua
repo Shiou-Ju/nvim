@@ -835,10 +835,11 @@ vim.api.nvim_create_autocmd("FileType", {
         -- 插入新列表項
         local next_num = tonumber(num) + 1
         local new_item = "<CR>" .. indent .. next_num .. ". "
-        
+
         -- 延遲執行重新編號，讓新行先插入
         vim.defer_fn(function()
-          renumber_list_from_insertion(current_line_num + 2, indent)
+          local renumber = require('renumber')
+          renumber.renumber_list_from_insertion(current_line_num + 2, indent)
         end, 10)
         
         return new_item
