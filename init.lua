@@ -825,8 +825,8 @@ vim.api.nvim_create_autocmd("FileType", {
        local line = lines[i]
        if line:match("^" .. indent_pattern .. "%d+%.%s+") then
          start_line = i
-       elseif not line:match("^%s*$") then
-         -- 遇到非空行且非列表項就停止
+       elseif not line:match("^%s*$") and not line:match("^#+%s+") then
+         -- 遇到非空行且非列表項且非標題就停止
          break
        end
      end
@@ -836,8 +836,8 @@ vim.api.nvim_create_autocmd("FileType", {
        local line = lines[i]
        if line:match("^" .. indent_pattern .. "%d+%.%s+") then
          end_line = i
-       elseif not line:match("^%s*$") then
-         -- 遇到非空行且非列表項就停止
+       elseif not line:match("^%s*$") and not line:match("^#+%s+") then
+         -- 遇到非空行且非列表項且非標題就停止
          break
        end
      end
