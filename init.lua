@@ -276,7 +276,12 @@ vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter", "WinEnter"}, {
     -- 延遲執行以確保 buffer 完全載入
     vim.defer_fn(function()
       local bufname = vim.api.nvim_buf_get_name(0)
-      
+
+      -- 添加 nil 檢查防護
+      if not bufname or bufname == "" then
+        return
+      end
+
       -- Debug 輸出（可查看實際 buffer 路徑格式）
       if bufname:match("fugitive://") then
         print("Fugitive Buffer: " .. bufname)

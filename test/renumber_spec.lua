@@ -130,9 +130,9 @@ describe("數字列表重新編號", function()
       local api_mock = mock(vim.api, true)
       local defer_stub = stub(vim, 'defer_fn')
 
-      -- 設置模擬返回值
+      -- 設置模擬返回值 - "2. 第二項" 長度為 12 (UTF-8)
       api_mock.nvim_get_current_line.returns("2. 第二項")
-      api_mock.nvim_win_get_cursor.returns({2, 7})  -- 游標在行末
+      api_mock.nvim_win_get_cursor.returns({2, 11})  -- 修正：0-indexed，11 對應字串末尾
 
       -- 執行函數
       local result = renumber.handle_enter_key()
@@ -197,9 +197,9 @@ describe("數字列表重新編號", function()
       local api_mock = mock(vim.api, true)
       local defer_stub = stub(vim, 'defer_fn')
 
-      -- 嵌套列表項
+      -- 嵌套列表項 "  1. 子項目" 長度為 14 (UTF-8)
       api_mock.nvim_get_current_line.returns("  1. 子項目")
-      api_mock.nvim_win_get_cursor.returns({2, 9})  -- 游標在行末
+      api_mock.nvim_win_get_cursor.returns({2, 13})  -- 修正：0-indexed，13 對應字串末尾
 
       local result = renumber.handle_enter_key()
 
@@ -217,9 +217,9 @@ describe("數字列表重新編號", function()
       local api_mock = mock(vim.api, true)
       local defer_stub = stub(vim, 'defer_fn')
 
-      -- 深度嵌套列表
+      -- 深度嵌套列表 "    3. 深度嵌套項目" 長度為 25 (UTF-8)
       api_mock.nvim_get_current_line.returns("    3. 深度嵌套項目")
-      api_mock.nvim_win_get_cursor.returns({3, 15})  -- 游標在行末
+      api_mock.nvim_win_get_cursor.returns({3, 24})  -- 修正：0-indexed，24 對應字串末尾
 
       local result = renumber.handle_enter_key()
 

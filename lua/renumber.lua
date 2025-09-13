@@ -80,28 +80,37 @@ end
 -- 重新編號列表區塊（從插入點後開始）- 用於 Enter 鍵自動編號
 M.renumber_list_from_insertion = function(insertion_line, indent)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  if not lines or #lines == 0 then
+    vim.notify("警告：無法獲取緩衝區內容", vim.log.levels.WARN)
+    return
+  end
+
   local counter = 1
 
   -- 先找到插入點之前的最後一個數字
   for i = 1, insertion_line - 1 do
     local line = lines[i]
-    local current_indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
-    if current_indent == indent then
-      counter = tonumber(num) + 1
+    if line then  -- 添加 nil 檢查
+      local current_indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+      if current_indent == indent then
+        counter = tonumber(num) + 1
+      end
     end
   end
 
   -- 從插入點開始重新編號
   for i = insertion_line, #lines do
     local line = lines[i]
-    local current_indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
-    if current_indent == indent then
-      local new_line = indent .. counter .. ". " .. content
-      vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
-      counter = counter + 1
-    elseif not line:match("^%s*$") and not line:match("^" .. indent) then
-      -- 遇到不同縮排或非空行就停止
-      break
+    if line then  -- 添加 nil 檢查
+      local current_indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+      if current_indent == indent then
+        local new_line = indent .. counter .. ". " .. content
+        vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
+        counter = counter + 1
+      elseif not line:match("^%s*$") and not line:match("^" .. indent) then
+        -- 遇到不同縮排或非空行就停止
+        break
+      end
     end
   end
 end
@@ -194,9 +203,10 @@ M.handle_enter_key = function()
   local current_line_num = cursor_pos[1]
 
   -- 檢查是否在數字列表項末尾
-  local list_match = line:match("^(%s*)(%d+)%.%s+(.*)")
-  if list_match and current_col >= #line then
-    local indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+  local indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+  -- 修正：0-indexed 游標位置 vs 1-indexed 字串長度
+  if indent and current_col >= #line - 1 then
+    -- 已經有 indent, num, content 了
 
     -- 如果內容為空，退出列表模式
     if content == "" then
