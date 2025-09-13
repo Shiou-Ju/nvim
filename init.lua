@@ -894,10 +894,11 @@ vim.api.nvim_create_autocmd("FileType", {
      for i = start_line, end_line do
        local line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1]
        if not line then break end
-       
+
+       -- 檢查是否為數字列表項（不限制縮排）
        local current_indent, old_num, line_content = line:match("^(%s*)(%d+)%.%s+(.*)")
-       if current_indent == indent then
-         local new_line = indent .. counter .. ". " .. line_content
+       if current_indent and old_num and line_content then
+         local new_line = current_indent .. counter .. ". " .. line_content
          vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
          counter = counter + 1
        end
