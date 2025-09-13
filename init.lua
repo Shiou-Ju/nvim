@@ -876,35 +876,48 @@ vim.api.nvim_create_autocmd("FileType", {
    
    -- 重新編號整個列表（方案 C）
    local function renumber_entire_list()
+     vim.notify("🔧 開始執行 renumber_entire_list", vim.log.levels.INFO)
      local cursor_pos = vim.api.nvim_win_get_cursor(0)
      local current_line = vim.api.nvim_get_current_line()
-     
+     vim.notify("📍 游標位置：行 " .. cursor_pos[1] .. "，內容：" .. current_line, vim.log.levels.INFO)
+
      -- 檢查當前行是否在數字列表中
      local indent, num, content = current_line:match("^(%s*)(%d+)%.%s+(.*)")
      if not indent then
-       vim.notify("游標不在數字列表項上", vim.log.levels.WARN)
+       vim.notify("❌ 游標不在數字列表項上", vim.log.levels.WARN)
        return
      end
-     
+     vim.notify("✅ 檢測到列表項：縮排='" .. indent .. "'，編號=" .. num, vim.log.levels.INFO)
+
      -- 找到整個列表的邊界
      local start_line, end_line = find_complete_list_boundaries(cursor_pos[1], indent)
-     
+     vim.notify("📊 邊界檢測結果：start_line=" .. start_line .. "，end_line=" .. end_line, vim.log.levels.INFO)
+
      -- 重新編號整個列表
      local counter = 1
+     local processed_count = 0
      for i = start_line, end_line do
        local line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1]
-       if not line then break end
+       if not line then
+         vim.notify("⚠️  第 " .. i .. " 行為空，跳出迴圈", vim.log.levels.WARN)
+         break
+       end
 
+       vim.notify("🔍 檢查第 " .. i .. " 行：" .. line, vim.log.levels.INFO)
        -- 檢查是否為數字列表項（不限制縮排）
        local current_indent, old_num, line_content = line:match("^(%s*)(%d+)%.%s+(.*)")
        if current_indent and old_num and line_content then
          local new_line = current_indent .. counter .. ". " .. line_content
          vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
+         vim.notify("✏️  更新第 " .. i .. " 行：" .. old_num .. " → " .. counter, vim.log.levels.INFO)
          counter = counter + 1
+         processed_count = processed_count + 1
+       else
+         vim.notify("⏭️  第 " .. i .. " 行非列表項，跳過", vim.log.levels.INFO)
        end
      end
-     
-     vim.notify("已重新編號 " .. (counter - 1) .. " 個列表項", vim.log.levels.INFO)
+
+     vim.notify("🎉 完成重新編號：處理 " .. processed_count .. " 個列表項", vim.log.levels.INFO)
    end
    
    -- 添加數字列表快捷鍵
