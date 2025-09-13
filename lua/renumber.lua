@@ -77,63 +77,81 @@ M.renumber_entire_list = function()
   vim.notify("完成重新編號：處理 " .. processed_count .. " 個列表項", vim.log.levels.INFO)
 end
 
--- 重新編號整個章節範圍
+-- 重新編號整個章節範圍（支援嵌套列表）
 M.renumber_section = function(start_line, end_line)
-  local counter = 1
-  for i = start_line, end_line do
-    local line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1]
+  local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  local indent_counters = {}  -- 每個縮排層級的計數器
+
+  for i = 1, #lines do
+    local line = lines[i]
     if line then
       local indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
       if indent and old_num and content then
-        local new_line = indent .. counter .. ". " .. content
-        vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
-        counter = counter + 1
+        -- 為每個縮排層級維持獨立計數器
+        if not indent_counters[indent] then
+          indent_counters[indent] = 1
+        else
+          indent_counters[indent] = indent_counters[indent] + 1
+        end
+
+        local new_line = indent .. indent_counters[indent] .. ". " .. content
+        vim.api.nvim_buf_set_lines(0, start_line - 1 + i - 1, start_line - 1 + i, false, {new_line})
       end
     end
   end
 end
 
--- 重新編號所有章節（全文檔處理）
+-- 重新編號所有章節（全文檔處理，支援嵌套列表）
 M.renumber_all_sections = function()
   vim.notify("開始處理全文檔章節重新編號", vim.log.levels.INFO)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local in_list = false
-  local list_start = nil
+  local indent_counters = {}  -- 全域縮排計數器
+  local last_indent = ""     -- 記錄上一個列表項的縮排
 
   for i = 1, #lines do
     local line = lines[i]
 
-    -- 遇到標題，結束前一個列表
+    -- 遇到標題，重置所有計數器
     if line:match("^##+%s+") then
-      if in_list and list_start then
-        vim.notify("處理章節列表：行 " .. list_start .. " 到 " .. (i - 1), vim.log.levels.INFO)
-        M.renumber_section(list_start, i - 1)
-      end
-      in_list = false
-      list_start = nil
+      indent_counters = {}
+      last_indent = ""
 
-    -- 遇到數字列表項
+    -- 遇到數字列表項，直接處理
     elseif line:match("^%s*%d+%.%s+") then
-      if not in_list then
-        list_start = i
-        in_list = true
+      local indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+      if indent and old_num and content then
+        -- 如果回到較外層的縮排，清除較內層的計數器
+        if indent ~= last_indent then
+          local keys_to_remove = {}
+          for existing_indent, _ in pairs(indent_counters) do
+            if #existing_indent > #indent then
+              table.insert(keys_to_remove, existing_indent)
+            end
+          end
+          for _, key in ipairs(keys_to_remove) do
+            indent_counters[key] = nil
+          end
+        end
+
+        -- 為每個縮排層級維持獨立計數器
+        if not indent_counters[indent] then
+          indent_counters[indent] = 1
+        else
+          indent_counters[indent] = indent_counters[indent] + 1
+        end
+
+        local new_line = indent .. indent_counters[indent] .. ". " .. content
+        vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
+        vim.notify("更新第 " .. i .. " 行：" .. old_num .. " → " .. indent_counters[indent], vim.log.levels.INFO)
+        last_indent = indent
       end
 
-    -- 遇到非列表非空行
-    elseif not line:match("^%s*$") then
-      if in_list and list_start then
-        vim.notify("處理列表：行 " .. list_start .. " 到 " .. (i - 1), vim.log.levels.INFO)
-        M.renumber_section(list_start, i - 1)
-      end
-      in_list = false
-      list_start = nil
+    -- 遇到非列表非空行，重置計數器（但保留標題檢查）
+    elseif not line:match("^%s*$") and not line:match("^##+%s+") then
+      -- 重置所有縮排計數器，因為列表中斷了
+      indent_counters = {}
+      last_indent = ""
     end
-  end
-
-  -- 處理最後一個列表
-  if in_list and list_start then
-    vim.notify("處理最後列表：行 " .. list_start .. " 到 " .. #lines, vim.log.levels.INFO)
-    M.renumber_section(list_start, #lines)
   end
 
   vim.notify("完成全文檔章節重新編號", vim.log.levels.INFO)
