@@ -186,4 +186,37 @@ M.renumber_all_sections = function()
   vim.notify("完成全文檔章節重新編號", vim.log.levels.INFO)
 end
 
+-- Enter 鍵處理函數（可測試版本）
+M.handle_enter_key = function()
+  local line = vim.api.nvim_get_current_line()
+  local cursor_pos = vim.api.nvim_win_get_cursor(0)
+  local current_col = cursor_pos[2]
+  local current_line_num = cursor_pos[1]
+
+  -- 檢查是否在數字列表項末尾
+  local list_match = line:match("^(%s*)(%d+)%.%s+(.*)")
+  if list_match and current_col >= #line then
+    local indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
+
+    -- 如果內容為空，退出列表模式
+    if content == "" then
+      return "<CR>"
+    end
+
+    -- 插入新列表項
+    local next_num = tonumber(num) + 1
+    local new_item = "<CR>" .. indent .. next_num .. ". "
+
+    -- 延遲執行重新編號，讓新行先插入
+    vim.defer_fn(function()
+      M.renumber_list_from_insertion(current_line_num + 2, indent)
+    end, 10)
+
+    return new_item
+  end
+
+  -- 正常行為
+  return "<CR>"
+end
+
 return M
