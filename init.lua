@@ -386,7 +386,26 @@ require("lazy").setup({
           },
           -- 刪除線 (Strikethrough)
              ["S"] = {
-            add = { "~~", "~~" },
+            add = function()
+              local mode = vim.fn.visualmode()
+              
+              if mode == "V" then
+                -- Visual Line 模式：檢查是否為單行
+                local first_line = vim.fn.line("'<")
+                local last_line = vim.fn.line("'>")
+                
+                if first_line == last_line then
+                  -- 單行 Visual Line：左右加入
+                  return { "~~", "~~" }
+                else
+                  -- 多行 Visual Line：回歸原生跨行邏輯
+                  return nil
+                end
+              else
+                -- 字符模式：正常處理
+                return { "~~", "~~" }
+              end
+            end,
             find = function()
               return require("nvim-surround.config").get_selection({ pattern = "~~.-~~" })
             end,
