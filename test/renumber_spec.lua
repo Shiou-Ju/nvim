@@ -285,5 +285,63 @@ describe("數字列表重新編號", function()
       assert.are.equal("  3. 子項目二", result[4])
       assert.are.equal("  4. 子項目三", result[5])
     end)
+
+    it("應該處理跨章節插入時避免跨章節編號累加", function()
+      local input = {
+        "## 教學",
+        "1. 第一項",
+        "2. 第二項",
+        "",
+        "## PM",
+        "3. [新插入的項目]",  -- 這個編號 3 是錯誤的，應該是 1
+        "4. 後續項目"
+      }
+
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, input)
+
+      -- 模擬在 PM 章節第一行按 Enter 後的重新編號 (第7行開始)
+      renumber.renumber_list_from_insertion(7, "")
+
+      local result = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+      -- 教學章節保持不變
+      assert.are.equal("1. 第一項", result[2])
+      assert.are.equal("2. 第二項", result[3])
+
+      -- PM 章節的插入項目保持原狀
+      assert.are.equal("3. [新插入的項目]", result[6])
+      -- 後續項目應該接續編號，而不是跨章節累計
+      assert.are.equal("4. 後續項目", result[7])
+    end)
+
+    it("應該在新章節中正確計算起始編號", function()
+      local input = {
+        "## 教學",
+        "1. 第一項",
+        "2. 第二項",
+        "",
+        "## PM",
+        "1. 第一個 PM 項目"  -- 使用者已手動建立第一個項目
+      }
+
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, input)
+
+      -- 模擬在 PM 章節 "1. 第一個 PM 項目" 後按 Enter
+      -- Enter 鍵會插入新行，然後調用重新編號
+      vim.api.nvim_buf_set_lines(0, 6, 6, false, {"2. [新產生的項目]"})
+
+      -- 重新編號從新插入行的下一行開始 (第8行，但現在沒有內容)
+      renumber.renumber_list_from_insertion(8, "")
+
+      local result = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+      -- 教學章節保持不變
+      assert.are.equal("1. 第一項", result[2])
+      assert.are.equal("2. 第二項", result[3])
+
+      -- PM 章節應該正確編號
+      assert.are.equal("1. 第一個 PM 項目", result[6])
+      assert.are.equal("2. [新產生的項目]", result[7])
+    end)
   end)
 end)

@@ -87,13 +87,20 @@ M.renumber_list_from_insertion = function(insertion_line, indent)
 
   local counter = 1
 
-  -- 先找到插入點之前的最後一個數字
-  for i = 1, insertion_line - 1 do
+  -- 向上搜索最後一個相同縮排的數字，但遇到章節標題就停止
+  for i = insertion_line - 1, 1, -1 do
     local line = lines[i]
     if line then  -- 添加 nil 檢查
+      -- 遇到章節標題（# ## ### 等），停止搜索，當前章節從 1 開始
+      if line:match("^#+%s+") then
+        counter = 1
+        break
+      end
+
       local current_indent, num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
       if current_indent == indent then
         counter = tonumber(num) + 1
+        break  -- 找到相同縮排的數字就停止，不再向上搜索
       end
     end
   end
