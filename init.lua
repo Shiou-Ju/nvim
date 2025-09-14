@@ -543,10 +543,11 @@ require("lazy").setup({
       -- 設定 mason
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { 
+        ensure_installed = {
           "jdtls" ,  --java lsp
-          "marksman" --markdown lsp 
-        }, 
+          "marksman", --markdown lsp
+          "ts_ls"    --typescript lsp
+        },
       })
 
       -- 設定 LSP 按鍵映射
@@ -579,6 +580,11 @@ require("lazy").setup({
         on_attach = on_attach,  -- 使用您現有的 on_attach 函數
       })
 
+      -- 配置 ts_ls
+      require('lspconfig').ts_ls.setup({
+        on_attach = on_attach,
+      })
+
       -- 配置 jdtls
       require('lspconfig').jdtls.setup({
         on_attach = on_attach,
@@ -597,6 +603,8 @@ require("lazy").setup({
           "-data", jdtls_workspace_dir .. vim.fn.getcwd(),
         },
       })
+
+      
 
       -- 配置錯誤顯示
       vim.diagnostic.config({
