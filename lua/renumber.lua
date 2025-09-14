@@ -107,7 +107,7 @@ M.renumber_list_from_insertion = function(insertion_line, indent)
         break
       end
     end
-    vim.notify(string.format("Debug: section_start=%d, section_end=%d", section_start, section_end), vim.log.levels.INFO)
+    
 
   -- 向上搜索最後一個相同縮排的數字，但遇到章節標題就停止
   -- 步驟 C：限制重編號範圍 - 只在 section_start 到 insertion_line 範圍內搜尋

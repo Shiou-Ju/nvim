@@ -303,12 +303,14 @@ describe("數字列表重新編號", function()
       assert.are.equal("3. New Item A", result[4])
 
       -- Assert Section B remains unchanged
-      assert.are.equal("1. Item B1", result[6])
-      assert.are.equal("2. Item B2", result[7])
+      assert.are.equal("## Section B", result[6]) -- Section B heading is now at line 6
+      assert.are.equal("1. Item B1", result[7])
+      assert.are.equal("2. Item B2", result[8])
 
       -- Assert Section C remains unchanged
-      assert.are.equal("1. Item C1", result[9])
-      assert.are.equal("2. Item C2", result[10])
+      assert.are.equal("## Section C", result[10]) -- Section C heading is now at line 10
+      assert.are.equal("1. Item C1", result[11])
+      assert.are.equal("2. Item C2", result[12])
     end)
   end)
 
