@@ -276,7 +276,12 @@ vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter", "WinEnter"}, {
     -- 延遲執行以確保 buffer 完全載入
     vim.defer_fn(function()
       local bufname = vim.api.nvim_buf_get_name(0)
-      
+
+      -- 添加 nil 檢查防護
+      if not bufname or bufname == "" then
+        return
+      end
+
       -- Debug 輸出（可查看實際 buffer 路徑格式）
       if bufname:match("fugitive://") then
         print("Fugitive Buffer: " .. bufname)
@@ -812,11 +817,15 @@ vim.api.nvim_create_autocmd("FileType", {
 
 
    -- TODO: 只有 enter 鍵有用，並且不支援 o , O等 
+   -- 智能數字列表自動編號功能
+   
+   
    -- 添加數字列表快捷鍵
     vim.keymap.set('i', '<CR>', function()
       local line = vim.api.nvim_get_current_line()
       local cursor_pos = vim.api.nvim_win_get_cursor(0)
       local current_col = cursor_pos[2]
+      local current_line_num = cursor_pos[1]
       
       -- 檢查是否在數字列表項末尾
       local list_match = line:match("^(%s*)(%d+)%.%s+(.*)")
@@ -828,14 +837,39 @@ vim.api.nvim_create_autocmd("FileType", {
           return "<CR>"
         end
         
-        -- 否則創建新的列表項，數字+1
+        -- 插入新列表項
         local next_num = tonumber(num) + 1
-        return "<CR>" .. indent .. next_num .. ". "
+        local new_item = "<CR>" .. indent .. next_num .. ". "
+
+        -- 延遲執行重新編號，讓新行先插入
+        vim.defer_fn(function()
+          local renumber = require('renumber')
+          renumber.renumber_list_from_insertion(current_line_num + 2, indent)
+        end, 10)
+        
+        return new_item
       end
       
       -- 正常行為
       return "<CR>"
     end, { expr = true, buffer = true })
+    
+    -- 添加手動重新編號快捷鍵（方案 B）
+    local renumber = require('renumber')
+    vim.keymap.set('n', '<leader>rn', renumber.renumber_entire_list, {
+      desc = '重新編號當前數字列表',
+      buffer = true,
+      noremap = true,
+      silent = true
+    })
+
+    -- 添加全文檔重新編號快捷鍵
+    vim.keymap.set('n', '<leader>rN', renumber.renumber_all_sections, {
+      desc = '重新編號所有章節列表',
+      buffer = true,
+      noremap = true,
+      silent = true
+    })
   end
 })
 
