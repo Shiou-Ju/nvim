@@ -79,6 +79,7 @@ end
 
 -- 重新編號列表區塊（從插入點後開始）- 用於 Enter 鍵自動編號
 M.renumber_list_from_insertion = function(insertion_line, indent)
+  vim.notify(string.format("Debug: renumber_list_from_insertion called with insertion_line=%d, indent='%s'", insertion_line, indent), vim.log.levels.INFO)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   if not lines or #lines == 0 then
     vim.notify("警告：無法獲取緩衝區內容", vim.log.levels.WARN)
@@ -87,8 +88,30 @@ M.renumber_list_from_insertion = function(insertion_line, indent)
 
   local counter = 1
 
-  -- 向上搜索最後一個相同縮排的數字，但遇到章節標題就停止
+  -- 步驟 A：向上找章節邊界
+  local section_start = 1
   for i = insertion_line - 1, 1, -1 do
+    local line = lines[i]
+    if line and line:match("^#+%s+") then
+      section_start = i + 1  -- 章節標題的下一行
+      break
+    end
+  end
+
+  -- 步驟 B：向下找章節邊界
+  local section_end = #lines
+    for i = insertion_line + 1, #lines do
+      local line = lines[i]
+      if line and line:match("^#+%s+") then
+        section_end = i - 1  -- 下個章節標題的前一行
+        break
+      end
+    end
+    vim.notify(string.format("Debug: section_start=%d, section_end=%d", section_start, section_end), vim.log.levels.INFO)
+
+  -- 向上搜索最後一個相同縮排的數字，但遇到章節標題就停止
+  -- 步驟 C：限制重編號範圍 - 只在 section_start 到 insertion_line 範圍內搜尋
+  for i = insertion_line - 1, section_start, -1 do
     local line = lines[i]
     if line then  -- 添加 nil 檢查
       -- 遇到章節標題（# ## ### 等），停止搜索，當前章節從 1 開始
@@ -106,7 +129,8 @@ M.renumber_list_from_insertion = function(insertion_line, indent)
   end
 
   -- 從插入點開始重新編號
-  for i = insertion_line, #lines do
+  -- 步驟 C：限制重編號範圍 - 改為：for i = insertion_line, section_end do
+  for i = insertion_line, section_end do
     local line = lines[i]
     if line then  -- 添加 nil 檢查
       local current_indent, old_num, content = line:match("^(%s*)(%d+)%.%s+(.*)")
@@ -221,30 +245,12 @@ M.handle_enter_key = function()
     end
 
     -- 插入新列表項
-    -- 智能計算下一個編號，處理跨章節問題
-    local next_num = 1
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    for i = current_line_num - 1, 1, -1 do
-      local line = lines[i]
-      if line then
-        -- 遇到章節標題，停止搜索，從 1 開始
-        if line:match("^#+%s+") then
-          break
-        end
-        -- 找到上一個相同縮排的列表項
-        local prev_indent, prev_num = line:match("^(%s*)(%d+)%.%s+.*")
-        if prev_indent == indent then
-          next_num = tonumber(prev_num) + 1
-          break
-        end
-      end
-    end
-
+    local next_num = tonumber(num) + 1
     local new_item = "<CR>" .. indent .. next_num .. ". "
 
     -- 延遲執行重新編號，讓新行先插入
     vim.defer_fn(function()
-      M.renumber_list_from_insertion(current_line_num + 2, indent)
+      M.renumber_list_from_insertion(current_line_num + 1, indent)
     end, 10)
 
     return new_item

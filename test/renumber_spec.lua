@@ -131,7 +131,7 @@ describe("數字列表重新編號", function()
       local defer_stub = stub(vim, 'defer_fn')
 
       -- 模擬 get_lines，解決 nil 錯誤
-      api_mock.nvim_buf_get_lines.returns({"1. 第一項", "2. 第二項"})
+      stub(vim.api, 'nvim_buf_get_lines').returns({"1. 第一項", "2. 第二項"})
 
       -- 設置模擬返回值 - "2. 第二項" 長度為 12 (UTF-8)
       api_mock.nvim_get_current_line.returns("2. 第二項")
@@ -200,6 +200,9 @@ describe("數字列表重新編號", function()
       local api_mock = mock(vim.api, true)
       local defer_stub = stub(vim, 'defer_fn')
 
+      -- 模擬 get_lines
+      stub(vim.api, 'nvim_buf_get_lines').returns({"1. 主項目", "  1. 子項目"})
+
       -- 嵌套列表項 "  1. 子項目" 長度為 14 (UTF-8)
       api_mock.nvim_get_current_line.returns("  1. 子項目")
       api_mock.nvim_win_get_cursor.returns({2, 13})  -- 修正：0-indexed，13 對應字串末尾
@@ -265,6 +268,47 @@ describe("數字列表重新編號", function()
       -- Clean up
       mock.revert(api_mock)
       defer_stub:revert()
+    end)
+
+    it("跨章節 Enter 不影響其他章節", function()
+      -- Arrange
+      local input = {
+        "## Section A",
+        "1. Item A1",
+        "2. Item A2",
+        "",
+        "## Section B",
+        "1. Item B1",
+        "2. Item B2",
+        "",
+        "## Section C",
+        "1. Item C1",
+        "2. Item C2",
+      }
+
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, input)
+
+      -- Manually insert a line after "2. Item A2" (line 3) with a placeholder number
+      vim.api.nvim_buf_set_lines(0, 3, 3, false, {"3. New Item A"})
+
+      -- Now, simulate the deferred call to renumber_list_from_insertion
+      -- The insertion_line would be 4 (the new line's position), and indent is ""
+      renumber.renumber_list_from_insertion(4, "")
+
+      local result = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+      -- Assert Section A is renumbered correctly
+      assert.are.equal("1. Item A1", result[2])
+      assert.are.equal("2. Item A2", result[3])
+      assert.are.equal("3. New Item A", result[4])
+
+      -- Assert Section B remains unchanged
+      assert.are.equal("1. Item B1", result[6])
+      assert.are.equal("2. Item B2", result[7])
+
+      -- Assert Section C remains unchanged
+      assert.are.equal("1. Item C1", result[9])
+      assert.are.equal("2. Item C2", result[10])
     end)
   end)
 
