@@ -221,7 +221,25 @@ M.handle_enter_key = function()
     end
 
     -- 插入新列表項
-    local next_num = tonumber(num) + 1
+    -- 智能計算下一個編號，處理跨章節問題
+    local next_num = 1
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    for i = current_line_num - 1, 1, -1 do
+      local line = lines[i]
+      if line then
+        -- 遇到章節標題，停止搜索，從 1 開始
+        if line:match("^#+%s+") then
+          break
+        end
+        -- 找到上一個相同縮排的列表項
+        local prev_indent, prev_num = line:match("^(%s*)(%d+)%.%s+.*")
+        if prev_indent == indent then
+          next_num = tonumber(prev_num) + 1
+          break
+        end
+      end
+    end
+
     local new_item = "<CR>" .. indent .. next_num .. ". "
 
     -- 延遲執行重新編號，讓新行先插入

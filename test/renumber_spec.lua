@@ -130,6 +130,9 @@ describe("數字列表重新編號", function()
       local api_mock = mock(vim.api, true)
       local defer_stub = stub(vim, 'defer_fn')
 
+      -- 模擬 get_lines，解決 nil 錯誤
+      api_mock.nvim_buf_get_lines.returns({"1. 第一項", "2. 第二項"})
+
       -- 設置模擬返回值 - "2. 第二項" 長度為 12 (UTF-8)
       api_mock.nvim_get_current_line.returns("2. 第二項")
       api_mock.nvim_win_get_cursor.returns({2, 11})  -- 修正：0-indexed，11 對應字串末尾
@@ -226,6 +229,40 @@ describe("數字列表重新編號", function()
       -- 驗證保持相同縮排層級
       assert.are.equal("<CR>    4. ", result)
 
+      mock.revert(api_mock)
+      defer_stub:revert()
+    end)
+
+    it("在新章節的列表項後按 Enter 應從該章節繼續編號", function()
+      -- Arrange
+      local api_mock = mock(vim.api, true)
+      local defer_stub = stub(vim, 'defer_fn')
+
+      local input = {
+        "## Section A",
+        "1. A1",
+        "2. A2",
+        "",
+        "## Section B",
+        "1. B1", -- 游標在此行末尾
+      }
+
+      -- 模擬 handle_enter_key 內部會讀取整個 buffer
+      api_mock.nvim_buf_get_lines.returns(input)
+      -- 模擬當前行
+      api_mock.nvim_get_current_line.returns("1. B1")
+      -- 模擬游標位置 (第6行, "1. B1" 的結尾)
+      api_mock.nvim_win_get_cursor.returns({6, 5})
+
+      -- Act
+      local result = renumber.handle_enter_key()
+
+      -- Assert
+      -- 預期結果應該是 "2. "，而不是繼承 Section A 的 "3. "
+      assert.are.equal("<CR>2. ", result)
+      assert.stub(defer_stub).was.called()
+
+      -- Clean up
       mock.revert(api_mock)
       defer_stub:revert()
     end)
