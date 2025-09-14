@@ -552,12 +552,15 @@ require("lazy").setup({
 
       -- 設定 LSP 按鍵映射
       local on_attach = function(_, bufnr)
-        -- 顯示錯誤信息
+        -- 診斷相關快捷鍵
         vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = '顯示錯誤信息', buffer = bufnr })
-        -- 跳到下一個錯誤
         vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = '前一個錯誤', buffer = bufnr })
-        -- 跳到上一個錯誤
         vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = '下一個錯誤', buffer = bufnr })
+
+        -- LSP 導航快捷鍵 - 使用 Telescope 優化顯示
+        vim.keymap.set('n', 'gr', function()
+          require('telescope.builtin').lsp_references()
+        end, { desc = 'LSP: 查找所有引用 (Telescope)', buffer = bufnr })
       end
 
       -- 配置 Java LSP
