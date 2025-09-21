@@ -1323,17 +1323,6 @@ local function force_color_fix()
   print("🎨 色彩已強制修復！")
 end
 
--- 自動觸發：當 Neovim 獲得焦點或啟動時
-vim.api.nvim_create_autocmd({ "VimEnter", "FocusGained" }, {
-  group = vim.api.nvim_create_augroup("ColorFix", { clear = true }),
-  callback = function()
-    -- 檢查是否需要修復（避免不必要的操作）
-    if vim.fn.has('termguicolors') == 0 or vim.env.TERM == "vt100" then
-      force_color_fix()
-    end
-  end,
-})
-
 -- 手動觸發：命令
 vim.api.nvim_create_user_command('ColorFix', force_color_fix, {
   desc = "強制修復色彩環境"
