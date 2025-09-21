@@ -1287,6 +1287,58 @@ do
   vim.keymap.set('n', '<leader>lx', ':LiveServerStop<CR>', { desc = '停止 Live Server', silent = true })
 end
 
+-- ================================================================
+-- 顯示器切換色彩修復系統 (Issue #36)
+-- ================================================================
+
+-- Level 0: 色彩診斷工具
+vim.api.nvim_create_user_command('ColorDebug', function()
+  print("=== 色彩診斷報告 ===")
+  print("TERM: " .. (vim.env.TERM or "未設定"))
+  print("COLORTERM: " .. (vim.env.COLORTERM or "未設定"))
+  print("termguicolors: " .. tostring(vim.opt.termguicolors:get()))
+  print("色彩支援: " .. (vim.fn.has('termguicolors') == 1 and "是" or "否"))
+  print("tput colors: " .. (vim.fn.system('tput colors'):gsub('\n', '') or "無法檢測"))
+  print("當前主題: " .. (vim.g.colors_name or "未設定"))
+end, { desc = "診斷色彩環境狀態" })
+
+-- Level 1: 強制色彩修復
+local function force_color_fix()
+  -- 步驟1: 強制重設終端環境變數
+  vim.env.TERM = "xterm-256color"
+  vim.env.COLORTERM = "truecolor"
+
+  -- 步驟2: 強制啟用 Neovim 色彩功能
+  vim.opt.termguicolors = true
+
+  -- 步驟3: 重新載入主題
+  pcall(function()
+    vim.cmd('colorscheme tokyonight-night')
+  end)
+
+  -- 步驟4: 強制刷新畫面
+  vim.cmd('redraw!')
+
+  -- 步驟5: 顯示修復狀態
+  print("🎨 色彩已強制修復！")
+end
+
+-- 自動觸發：當 Neovim 獲得焦點或啟動時
+vim.api.nvim_create_autocmd({ "VimEnter", "FocusGained" }, {
+  group = vim.api.nvim_create_augroup("ColorFix", { clear = true }),
+  callback = function()
+    -- 檢查是否需要修復（避免不必要的操作）
+    if vim.fn.has('termguicolors') == 0 or vim.env.TERM == "vt100" then
+      force_color_fix()
+    end
+  end,
+})
+
+-- 手動觸發：命令
+vim.api.nvim_create_user_command('ColorFix', force_color_fix, {
+  desc = "強制修復色彩環境"
+})
+
 
 
 
