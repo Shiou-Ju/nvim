@@ -33,10 +33,10 @@ end
 
 -- 重新編號整個列表（當前章節）
 M.renumber_entire_list = function()
-  vim.notify("開始執行 renumber_entire_list", vim.log.levels.INFO)
+  -- vim.notify("開始執行 renumber_entire_list", vim.log.levels.INFO)
   local cursor_pos = vim.api.nvim_win_get_cursor(0)
   local current_line = vim.api.nvim_get_current_line()
-  vim.notify("游標位置：行 " .. cursor_pos[1] .. "，內容：" .. current_line, vim.log.levels.INFO)
+  -- vim.notify("游標位置：行 " .. cursor_pos[1] .. "，內容：" .. current_line, vim.log.levels.INFO)
 
   -- 檢查當前行是否在數字列表中
   local indent, num, content = current_line:match("^(%s*)(%d+)%.%s+(.*)")
@@ -44,11 +44,11 @@ M.renumber_entire_list = function()
     vim.notify("游標不在數字列表項上", vim.log.levels.WARN)
     return
   end
-  vim.notify("檢測到列表項：縮排='" .. indent .. "'，編號=" .. num, vim.log.levels.INFO)
+  -- vim.notify("檢測到列表項：縮排='" .. indent .. "'，編號=" .. num, vim.log.levels.INFO)
 
   -- 找到整個列表的邊界
   local start_line, end_line = find_complete_list_boundaries(cursor_pos[1], indent)
-  vim.notify("邊界檢測結果：start_line=" .. start_line .. "，end_line=" .. end_line, vim.log.levels.INFO)
+  -- vim.notify("邊界檢測結果：start_line=" .. start_line .. "，end_line=" .. end_line, vim.log.levels.INFO)
 
   -- 重新編號整個列表
   local counter = 1
@@ -60,13 +60,13 @@ M.renumber_entire_list = function()
       break
     end
 
-    vim.notify("檢查第 " .. i .. " 行：" .. line, vim.log.levels.INFO)
+    -- vim.notify("檢查第 " .. i .. " 行：" .. line, vim.log.levels.INFO)
     -- 檢查是否為數字列表項（不限制縮排）
     local current_indent, old_num, line_content = line:match("^(%s*)(%d+)%.%s+(.*)")
     if current_indent and old_num and line_content then
       local new_line = current_indent .. counter .. ". " .. line_content
       vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
-      vim.notify("更新第 " .. i .. " 行：" .. old_num .. " → " .. counter, vim.log.levels.INFO)
+      -- vim.notify("更新第 " .. i .. " 行：" .. old_num .. " → " .. counter, vim.log.levels.INFO)
       counter = counter + 1
       processed_count = processed_count + 1
     else
@@ -74,12 +74,12 @@ M.renumber_entire_list = function()
     end
   end
 
-  vim.notify("完成重新編號：處理 " .. processed_count .. " 個列表項", vim.log.levels.INFO)
+  -- vim.notify("完成重新編號：處理 " .. processed_count .. " 個列表項", vim.log.levels.INFO)
 end
 
 -- 重新編號列表區塊（從插入點後開始）- 用於 Enter 鍵自動編號
 M.renumber_list_from_insertion = function(insertion_line, indent)
-  vim.notify(string.format("Debug: renumber_list_from_insertion called with insertion_line=%d, indent='%s'", insertion_line, indent), vim.log.levels.INFO)
+  -- vim.notify(string.format("Debug: renumber_list_from_insertion called with insertion_line=%d, indent='%s'", insertion_line, indent), vim.log.levels.INFO)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   if not lines or #lines == 0 then
     vim.notify("警告：無法獲取緩衝區內容", vim.log.levels.WARN)
@@ -172,7 +172,7 @@ end
 
 -- 重新編號所有章節（全文檔處理，支援嵌套列表）
 M.renumber_all_sections = function()
-  vim.notify("開始處理全文檔章節重新編號", vim.log.levels.INFO)
+  -- vim.notify("開始處理全文檔章節重新編號", vim.log.levels.INFO)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local indent_counters = {}  -- 全域縮排計數器
   local last_indent = ""     -- 記錄上一個列表項的縮排
@@ -211,7 +211,7 @@ M.renumber_all_sections = function()
 
         local new_line = indent .. indent_counters[indent] .. ". " .. content
         vim.api.nvim_buf_set_lines(0, i - 1, i, false, {new_line})
-        vim.notify("更新第 " .. i .. " 行：" .. old_num .. " → " .. indent_counters[indent], vim.log.levels.INFO)
+        -- vim.notify("更新第 " .. i .. " 行：" .. old_num .. " → " .. indent_counters[indent], vim.log.levels.INFO)
         last_indent = indent
       end
 
@@ -220,10 +220,10 @@ M.renumber_all_sections = function()
       -- 重置所有縮排計數器，因為列表中斷了
       indent_counters = {}
       last_indent = ""
-    end
+      end
   end
 
-  vim.notify("完成全文檔章節重新編號", vim.log.levels.INFO)
+  -- vim.notify("完成全文檔章節重新編號", vim.log.levels.INFO)
 end
 
 -- Enter 鍵處理函數（可測試版本）
