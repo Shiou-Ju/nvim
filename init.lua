@@ -41,6 +41,16 @@ if vim.g.vscode then
     vim.keymap.set('n', 'zc', ":call VSCodeNotify('editor.fold')<CR>")
     vim.keymap.set('n', 'zo', ":call VSCodeNotify('editor.unfold')<CR>")
     vim.keymap.set('i', 'jj', '<Esc>')
+    
+    -- 新增 VSCode 專用快捷鍵
+    vim.keymap.set('n', '<leader>ff', ":call VSCodeNotify('workbench.action.quickOpen')<CR>", 
+      { desc = 'VSCode 快速開啟' })
+    vim.keymap.set('n', '<leader>fg', ":call VSCodeNotify('workbench.action.findInFiles')<CR>", 
+      { desc = 'VSCode 全域搜尋' })
+    vim.keymap.set('n', '<leader>fb', ":call VSCodeNotify('workbench.action.showAllEditors')<CR>", 
+      { desc = 'VSCode 切換 Buffer' })
+    vim.keymap.set('n', 'gr', ":call VSCodeNotify('editor.action.goToReferences')<CR>", 
+      { desc = 'VSCode 尋找引用' })
 else
     vim.opt.relativenumber = true
     vim.keymap.set('i', 'jj', '<Esc>')
@@ -225,6 +235,7 @@ vim.keymap.set({'n'}, '<leader>tt', toggle_terminal, { desc = 'tmux 相容終端
     -- vim.keymap.set('n', '<leader>ff', function()
     --   require('telescope.builtin').find_files()
     -- end, { desc = '搜尋檔案' })
+if not vim.g.vscode then
     vim.keymap.set('n', '<leader>ff', function()
       require('telescope.builtin').find_files({
         hidden = true,  -- 顯示隱藏檔案
@@ -254,6 +265,7 @@ vim.keymap.set({'n'}, '<leader>tt', toggle_terminal, { desc = 'tmux 相容終端
     vim.keymap.set('n', '<leader>@', function()
       require('telescope.builtin').current_buffer_fuzzy_find()
     end, { desc = '模糊搜尋當前緩衝區' })
+end
 
 
 end
@@ -431,6 +443,7 @@ require("lazy").setup({
   -- 顏色方案
 	  {
 	  "folke/tokyonight.nvim",
+	  cond = not vim.g.vscode,
 	  lazy = false,
 	  priority = 1000,  -- 確保它先載入
 	  config = function()
@@ -468,6 +481,7 @@ require("lazy").setup({
   -- Markdown 支援
   {
     "preservim/vim-markdown",
+    cond = not vim.g.vscode,
     ft = "markdown",
     config = function()
       vim.g.vim_markdown_folding_disabled = 1
@@ -482,6 +496,7 @@ require("lazy").setup({
     -- Telescope - 模糊搜尋工具
   {
     "nvim-telescope/telescope.nvim",
+    cond = not vim.g.vscode,
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-tree/nvim-web-devicons", -- 可選，提供檔案圖示
@@ -535,6 +550,7 @@ require("lazy").setup({
    -- LSP 基本配置
   {
     "neovim/nvim-lspconfig",
+    cond = not vim.g.vscode,
     dependencies = {
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
@@ -622,6 +638,7 @@ require("lazy").setup({
   -- 會顯示哪邊在 git 有變動
   {
   "lewis6991/gitsigns.nvim",
+  cond = not vim.g.vscode,
   config = function()
     require('gitsigns').setup({
       signs = {
@@ -661,6 +678,7 @@ require("lazy").setup({
   -- Git 進階操作插件
   {
     "tpope/vim-fugitive",
+    cond = not vim.g.vscode,
     config = function()
       -- 完整的 Git diff 快捷鍵配置
       vim.keymap.set('n', '<leader>gd', ':Gvdiffsplit<CR>', { desc = '工作目錄 vs 暫存區' })
@@ -675,6 +693,7 @@ require("lazy").setup({
     -- markdownlint into vim
     {
       "mfussenegger/nvim-lint",
+      cond = not vim.g.vscode,
       event = { "BufReadPre", "BufNewFile" },
       config = function()
         require('lint').linters_by_ft = {
@@ -718,6 +737,7 @@ require("lazy").setup({
     {
       -- glow.nvim: 在 Vim 內預覽 Markdown
       "ellisonleao/glow.nvim",
+      cond = not vim.g.vscode,
       ft = "markdown",
       cmd = "Glow",
       config = function()
@@ -733,6 +753,7 @@ require("lazy").setup({
     {
       -- markdown-preview.nvim: 在瀏覽器中預覽 Markdown
       "iamcco/markdown-preview.nvim",
+      cond = not vim.g.vscode,
       ft = "markdown",
       build = function()
         -- 指定 Node.js 路徑
@@ -782,6 +803,7 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
   callback = function()
     -- 快捷鍵設定
+    if not vim.g.vscode then
     -- glow.nvim：Vim 內預覽
     vim.keymap.set('n', '<leader>mp', ':Glow<CR>', { 
       desc = 'Markdown 內部預覽 (Glow)', 
@@ -805,6 +827,7 @@ vim.api.nvim_create_autocmd("FileType", {
       noremap = true, 
       silent = true 
     })
+    end
     
     -- 編輯器設定
     vim.opt_local.formatoptions = "roj1n"  -- 設定所有格式化選項一次性
