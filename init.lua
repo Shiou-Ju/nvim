@@ -790,7 +790,45 @@ require("lazy").setup({
         vim.g.mkdp_echo_preview_url = 1   -- 顯示預覽 URL
         vim.g.mkdp_page_title = '「${name}」'  -- 預覽頁面標題格式
       end,
-    }
+    },
+    -- Markdown buffer 內文字格式美化 (Issue #55)
+    -- 只在 Kitty 終端載入，iTerm2 不使用（列表編號顯示異常）
+    {
+      "MeanderingProgrammer/render-markdown.nvim",
+      cond = not vim.g.vscode and (vim.env.TERM_PROGRAM == "kitty" or vim.env.TERM == "xterm-kitty"),
+      ft = "markdown",
+      dependencies = {
+        "nvim-treesitter/nvim-treesitter",
+        "nvim-tree/nvim-web-devicons",
+      },
+      config = function()
+        require("render-markdown").setup({
+          sign = { enabled = false },
+        })
+      end,
+    },
+    -- Neovim buffer 內顯示圖片，需 Kitty 終端 (Issue #55)
+    -- 使用 magick_cli processor，直接呼叫系統 magick 指令，不需要 luarocks magick rock
+    -- 只在 Kitty 終端載入，避免在 iTerm2 等環境報錯
+    {
+      "3rd/image.nvim",
+      cond = not vim.g.vscode and (vim.env.TERM_PROGRAM == "kitty" or vim.env.TERM == "xterm-kitty"),
+      ft = "markdown",
+      config = function()
+        require("image").setup({
+          backend = "kitty",
+          processor = "magick_cli",
+          integrations = {
+            markdown = {
+              enabled = true,
+              sizing_strategy = "auto",
+            },
+          },
+          max_width = 100,
+          max_height = 30,
+        })
+      end,
+    },
 })
 
 -- 解決 terminal 跟文件目錄不一致的問題
