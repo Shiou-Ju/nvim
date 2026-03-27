@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **插件管理**：使用 lazy.nvim 進行插件管理
 - **模組化設計**：透過 autocmd 和函數組織不同功能模組
 - **備份支援**：`backup/` 目錄存放配置備份
+- **工具腳本**：`scripts/` 目錄存放輔助腳本（如 base64 圖片轉換）
 
 ### 插件生態系統
 ```lua
