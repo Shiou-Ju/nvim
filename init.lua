@@ -139,7 +139,24 @@ else
     -- +x 是剪下到系統的剪貼簿
     vim.keymap.set('v', '<leader>x', '"+x', { desc = '剪下到系統剪貼簿', noremap = true })
 
+    -- 複製檔案路徑/檔名到系統剪貼簿
+    vim.keymap.set('n', '<leader>cfn', function()
+      local name = vim.fn.expand('%:t')
+      vim.fn.setreg('+', name)
+      print('已複製檔名: ' .. name)
+    end, { desc = '複製檔名到剪貼簿', noremap = true })
 
+    vim.keymap.set('n', '<leader>cp', function()
+      local path = vim.fn.expand('%')
+      vim.fn.setreg('+', path)
+      print('已複製相對路徑: ' .. path)
+    end, { desc = '複製相對路徑到剪貼簿', noremap = true })
+
+    vim.keymap.set('n', '<leader>ccp', function()
+      local path = vim.fn.expand('%:p')
+      vim.fn.setreg('+', path)
+      print('已複製完整路徑: ' .. path)
+    end, { desc = '複製完整路徑到剪貼簿', noremap = true })
 
     -- 自訂 zt 命令，保留 3 行緩衝
     vim.keymap.set(
