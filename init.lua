@@ -139,7 +139,24 @@ else
     -- +x 是剪下到系統的剪貼簿
     vim.keymap.set('v', '<leader>x', '"+x', { desc = '剪下到系統剪貼簿', noremap = true })
 
+    -- 複製檔案路徑/檔名到系統剪貼簿
+    vim.keymap.set('n', '<leader>cfn', function()
+      local name = vim.fn.expand('%:t')
+      vim.fn.setreg('+', name)
+      print('已複製檔名: ' .. name)
+    end, { desc = '複製檔名到剪貼簿', noremap = true })
 
+    vim.keymap.set('n', '<leader>cp', function()
+      local path = vim.fn.expand('%')
+      vim.fn.setreg('+', path)
+      print('已複製相對路徑: ' .. path)
+    end, { desc = '複製相對路徑到剪貼簿', noremap = true })
+
+    vim.keymap.set('n', '<leader>ccp', function()
+      local path = vim.fn.expand('%:p')
+      vim.fn.setreg('+', path)
+      print('已複製完整路徑: ' .. path)
+    end, { desc = '複製完整路徑到剪貼簿', noremap = true })
 
     -- 自訂 zt 命令，保留 3 行緩衝
     vim.keymap.set(
@@ -696,8 +713,10 @@ require("lazy").setup({
       cond = not vim.g.vscode,
       event = { "BufReadPre", "BufNewFile" },
       config = function()
+        -- 關閉 markdownlint 診斷：規則過於嚴格，產生大量警告影響編輯體驗
+        -- 如需重新啟用，將 markdown = {} 改回 markdown = {'markdownlint'}
         require('lint').linters_by_ft = {
-          markdown = {'markdownlint'}
+          markdown = {}
         }
         
         -- 自動執行 lint，在檔案打開和保存時檢查
@@ -975,6 +994,31 @@ end, {})
 -- 設定快捷鍵 <leader>nf 來觸發 NewFile 命令
 vim.keymap.set('n', '<leader>nf', ':NewFile<CR>', {desc = '新建檔案'})
 
+-- 一鍵建立每日日記 (Issue #53)
+local function opentd()
+  local diary_dir = "/Users/bamboo/Dropbox/筆記/日記"
+  local diary_template = "/Users/bamboo/Dropbox/筆記/生活/日記_md_template.md"
+  local date = os.date("%Y%m%d")
+  local filepath = diary_dir .. "/" .. date .. ".md"
+
+  if vim.fn.filereadable(filepath) == 1 then
+    vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+    print('開啟日記: ' .. date .. '.md')
+    return
+  end
+
+  if vim.fn.isdirectory(diary_dir) == 0 then
+    vim.fn.mkdir(diary_dir, 'p')
+  end
+
+  local template_lines = vim.fn.readfile(diary_template)
+  vim.fn.writefile(template_lines, filepath)
+  vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+  print('已建立日記: ' .. date .. '.md')
+end
+
+vim.keymap.set('n', '<leader>td', opentd, { desc = '建立/開啟今日日記', noremap = true })
+
 -- 使用 space y y 複製整行到系統剪貼簿
 vim.keymap.set('n', '<leader>yy', '"+yy', { desc = '複製整行到系統剪貼簿', noremap = true })
 -- 使用 space y w 複製單詞到系統剪貼簿
@@ -1136,7 +1180,12 @@ vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
 -- })
 --
 vim.api.nvim_create_autocmd({"BufReadPost","BufNewFile","BufEnter"}, {
-  callback = function() vim.cmd("normal! zR") end
+  -- callback = function() vim.cmd("normal! zR") end
+  callback = function()
+    if vim.bo.buftype ~= "terminal" then
+      vim.cmd("normal! zR")
+    end
+  end
 })
 
 
