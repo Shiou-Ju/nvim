@@ -994,6 +994,31 @@ end, {})
 -- 設定快捷鍵 <leader>nf 來觸發 NewFile 命令
 vim.keymap.set('n', '<leader>nf', ':NewFile<CR>', {desc = '新建檔案'})
 
+-- 一鍵建立每日日記 (Issue #53)
+local function opentd()
+  local diary_dir = "/Users/bamboo/Dropbox/筆記/日記"
+  local diary_template = "/Users/bamboo/Dropbox/筆記/生活/日記_md_template.md"
+  local date = os.date("%Y%m%d")
+  local filepath = diary_dir .. "/" .. date .. ".md"
+
+  if vim.fn.filereadable(filepath) == 1 then
+    vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+    print('開啟日記: ' .. date .. '.md')
+    return
+  end
+
+  if vim.fn.isdirectory(diary_dir) == 0 then
+    vim.fn.mkdir(diary_dir, 'p')
+  end
+
+  local template_lines = vim.fn.readfile(diary_template)
+  vim.fn.writefile(template_lines, filepath)
+  vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+  print('已建立日記: ' .. date .. '.md')
+end
+
+vim.keymap.set('n', '<leader>td', opentd, { desc = '建立/開啟今日日記', noremap = true })
+
 -- 使用 space y y 複製整行到系統剪貼簿
 vim.keymap.set('n', '<leader>yy', '"+yy', { desc = '複製整行到系統剪貼簿', noremap = true })
 -- 使用 space y w 複製單詞到系統剪貼簿
