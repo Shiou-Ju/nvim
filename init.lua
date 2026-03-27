@@ -696,8 +696,10 @@ require("lazy").setup({
       cond = not vim.g.vscode,
       event = { "BufReadPre", "BufNewFile" },
       config = function()
+        -- 關閉 markdownlint 診斷：規則過於嚴格，產生大量警告影響編輯體驗
+        -- 如需重新啟用，將 markdown = {} 改回 markdown = {'markdownlint'}
         require('lint').linters_by_ft = {
-          markdown = {'markdownlint'}
+          markdown = {}
         }
         
         -- 自動執行 lint，在檔案打開和保存時檢查
@@ -1136,7 +1138,12 @@ vim.opt.foldlevelstart = 99  -- 預設展開所有折疊
 -- })
 --
 vim.api.nvim_create_autocmd({"BufReadPost","BufNewFile","BufEnter"}, {
-  callback = function() vim.cmd("normal! zR") end
+  -- callback = function() vim.cmd("normal! zR") end
+  callback = function()
+    if vim.bo.buftype ~= "terminal" then
+      vim.cmd("normal! zR")
+    end
+  end
 })
 
 
