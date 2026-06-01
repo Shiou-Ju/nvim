@@ -545,10 +545,12 @@ require("lazy").setup({
           },
         },
         sorting_strategy = "ascending",  -- 使結果從上往下排列，類似 VS Code
+        layout_strategy = "flex",        -- 依視窗寬度自動切換水平/垂直佈局
         layout_config = {
-          horizontal = {
-            prompt_position = "top",  -- 將提示放在頂部
-          },
+          prompt_position = "top",       -- 提示固定在頂部（兩種佈局都套用）
+          flex = { flip_columns = 120 }, -- 視窗寬度 < 120 欄時改為上下排
+          horizontal = { preview_width = 0.55 },
+          vertical = { preview_height = 0.5 },
         },
       },
       pickers = {
