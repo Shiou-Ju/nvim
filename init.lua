@@ -64,6 +64,8 @@ else
     vim.keymap.set('n', '<leader>j', '<C-w>j', { desc = '向下切換視窗' })
     vim.keymap.set('n', '<leader>k', '<C-w>k', { desc = '向上切換視窗' })
     vim.keymap.set('n', '<leader>l', '<C-w>l', { desc = '向右切換視窗' })
+    -- 快速回到上一個檔案：在當前與前一個編輯檔案間 toggle (Issue #63)
+    vim.keymap.set('n', '<leader><leader>', '<C-^>', { desc = '回到上一個檔案 (alternate file)' })
     -- 專門處理 terminal 的視窗
     -- vim.keymap.set('t', 'JKL', '<C-\\><C-n>', { desc = '使用 JKL 退出終端模式' })
 
