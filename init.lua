@@ -267,8 +267,40 @@ if not vim.g.vscode then
     end, { desc = '最近開啟的檔案' })
 
     
+    -- 自訂 grep previewer：讓 match 行貼齊預覽窗最上方 (zt)，檔尾留白也可接受
+    local grep_top_ns = vim.api.nvim_create_namespace('grep_preview_top')
+    local function grep_preview_top()
+      local previewers = require('telescope.previewers')
+      local from_entry = require('telescope.from_entry')
+      local tconf = require('telescope.config').values
+      return previewers.new_buffer_previewer({
+        title = 'Grep Preview',
+        get_buffer_by_name = function(_, entry)
+          return from_entry.path(entry, false, false)
+        end,
+        define_preview = function(self, entry)
+          local p = from_entry.path(entry, true, false)
+          if p == nil or p == '' then return end
+          tconf.buffer_previewer_maker(p, self.state.bufnr, {
+            bufname = self.state.bufname,
+            winid = self.state.winid,
+            callback = function(bufnr)
+              if not entry.lnum or entry.lnum <= 0 then return end
+              pcall(vim.api.nvim_buf_add_highlight, bufnr, grep_top_ns,
+                'TelescopePreviewLine', entry.lnum - 1, 0, -1)
+              pcall(vim.api.nvim_win_set_cursor, self.state.winid, { entry.lnum, 0 })
+              vim.api.nvim_win_call(self.state.winid, function()
+                vim.cmd('setlocal scrolloff=0')
+                vim.cmd('normal! zt')
+              end)
+            end,
+          })
+        end,
+      })
+    end
+
     vim.keymap.set('n', '<leader>fg', function()
-      require('telescope.builtin').live_grep()
+      require('telescope.builtin').live_grep({ previewer = grep_preview_top() })
     end, { desc = '搜尋文字內容' })
     
     vim.keymap.set('n', '<leader>fb', function()
@@ -491,8 +523,13 @@ require("lazy").setup({
 		    vim.api.nvim_set_hl(0, "DiffDelete", { bg = "#4a1a1a", fg = "#f7768e" })
 		    vim.api.nvim_set_hl(0, "DiffChange", { bg = "#1a1a4a", fg = "#e0af68" })
 		    vim.api.nvim_set_hl(0, "DiffText", { bg = "#4a4a1a", fg = "#bb9af7" })
+
+		    -- 讓 Telescope 搜尋關鍵字更明顯：黃底黑字加粗 (Issue #62)
+		    vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = "#1a1b26", bg = "#ffc777", bold = true })
 		  end
 		})
+		-- autocmd 註冊在 colorscheme 套用之後，啟動時不會自動觸發，故立即手動觸發一次
+		vim.cmd("doautocmd ColorScheme")
 	  end,
 	},
   -- Markdown 支援
@@ -550,7 +587,7 @@ require("lazy").setup({
           prompt_position = "top",       -- 提示固定在頂部（兩種佈局都套用）
           flex = { flip_columns = 120 }, -- 視窗寬度 < 120 欄時改為上下排
           horizontal = { preview_width = 0.55 },
-          vertical = { preview_height = 0.5 },
+          vertical = { preview_height = 0.5, mirror = true }, -- 列表在上、預覽在下 (Issue #64)
         },
       },
       pickers = {
