@@ -303,3 +303,6 @@ end
 - **Commit 連結格式**：commit hash 與其他符號之間必須有空格，確保 GitHub 能正確產生連結
   - ✅ 正確：`Commit: ba864a6` 或 `實作 commit: ba864a6`
   - ❌ 錯誤：`Commit:ba864a6` 或 `commit:ba864a6`（缺少空格）
+- **🔒 公開 repo 匿名化原則**：本 repo 為公開。建立/編輯 issue、發 issue comment（ic）前，**必須匿名化**真實檔名、絕對路徑（含使用者名，如 `/Users/<user>/...`）、個人筆記資料夾名、搜尋關鍵字與筆記內容，改用泛用描述（如「某自動產生型超大 Markdown 檔」）。技術內容（行號、設定值、插件原始碼）可保留。session 內部仍可用真實名稱溝通，只有對外發布的文字需匿名。
+- **🚨 編輯無法消除 issue 歷史**：已洩漏個資的 issue 用「編輯」不夠，GitHub 保留 edit history 仍可被檢視；必須**刪除後重開**乾淨版本。
+- **🚨 gh 破壞性操作須先警示**：`gh issue delete`、`gh pr close`、`gh pr merge`、`gh release delete`、`gh secret` 等不可逆或高影響操作，**即使用戶已明確指示，執行前仍須先口頭警示一次再做**（刪除尤其不可逆）。
