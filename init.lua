@@ -577,6 +577,12 @@ require("lazy").setup({
     -- })
         defaults = {
         file_ignore_patterns = { "node_modules", ".git" },
+        -- 超過 2MB 的檔不載入預覽，避免超大檔（如十幾萬行）灌入預覽 buffer 導致當機 (Issue #70)
+        -- 內容仍可被 live_grep 命中，只是不顯示預覽
+        preview = {
+          filesize_limit = 2,  -- MB
+          timeout = 250,       -- ms
+        },
         mappings = {
           i = {
             ["<C-j>"] = "move_selection_next",
