@@ -528,6 +528,8 @@ require("lazy").setup({
 
 		    -- 讓 Telescope 搜尋關鍵字更明顯：黃底黑字加粗 (Issue #62)
 		    vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = "#1a1b26", bg = "#ffc777", bold = true })
+		    -- 預覽窗命中行整行高亮：黃底黑字加粗，取代偏淡的預設 Visual (Issue #74)
+		    vim.api.nvim_set_hl(0, "TelescopePreviewLine", { fg = "#1a1b26", bg = "#ffc777", bold = true })
 		  end
 		})
 		-- autocmd 註冊在 colorscheme 套用之後，啟動時不會自動觸發，故立即手動觸發一次
