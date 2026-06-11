@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TelescopePreviewLine 高亮樣式對照 (Issue #74)</title>
+<style>
+  :root {
+    --bg: #1a1b26;          /* tokyonight night 編輯區底 */
+    --bg-dark: #16161e;     /* 外框/側邊 */
+    --fg: #c0caf5;          /* 前景 */
+    --comment: #565f89;     /* 註解/淡字 */
+    --linenr: #3b4261;      /* 行號 */
+    --linenr-cur: #ff9e64;  /* CursorLineNr 橘 */
+    --yellow: #ffc777;      /* TelescopeMatching 黃底 */
+    --blue: #7aa2f7;
+    --green: #9ece6a;
+    --cyan: #7dcfff;
+    --magenta: #bb9af7;
+    /* 預覽行候選 */
+    --visual: #283457;      /* 目前 (Visual) */
+    --blue0: #3d59a1;       /* A 亮藍 */
+    --b-bg: #24304e;        /* B 微底 */
+    --d-bg: #2e3c64;        /* D 中藍 */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px;
+    background: #0c0e14;
+    color: var(--fg);
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #8a91b8; font-size: 13px; margin-bottom: 24px; }
+  .sub code { color: var(--yellow); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--bg-dark);
+    border: 1px solid #20222e;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .card.current { border-color: #f7768e55; }
+  .card-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid #20222e;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tag {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    background: #2a2e42; color: var(--blue);
+  }
+  .tag.now { background: #3a2230; color: #f7768e; }
+  .card-head .name { font-size: 14px; font-weight: 600; }
+  /* 模擬 Telescope 預覽窗 */
+  .preview {
+    background: var(--bg);
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-size: 13px; line-height: 1.7;
+    padding: 8px 0;
+  }
+  .row { display: flex; padding: 0 12px; white-space: pre; }
+  .ln { color: var(--linenr); width: 34px; text-align: right; padding-right: 14px; user-select: none; flex: none; }
+  .txt { color: var(--fg); }
+  .txt .c { color: var(--comment); }
+  .txt .k { color: var(--magenta); }
+  .txt .s { color: var(--green); }
+  .txt .f { color: var(--blue); }
+  /* 命中字(列表/行內)黃底黑字 = TelescopeMatching */
+  .match { background: var(--yellow); color: var(--bg); border-radius: 2px; font-weight: 700; }
+
+  /* === 預覽命中行各候選 === */
+  .hit { } /* 基底 */
+  .now  .hit { background: var(--visual); }
+  .A    .hit { background: var(--blue0); }
+  .B    .hit { background: var(--b-bg); box-shadow: inset 3px 0 0 var(--yellow); }
+  .C    .hit { background: var(--yellow); }
+  .C    .hit .ln { color: #1a1b2699; }
+  .C    .hit .txt, .C .hit .txt * { color: var(--bg) !important; font-weight: 600; }
+  .D    .hit { background: var(--d-bg); }
+  .D    .hit .txt { color: #ffffff; font-weight: 700; }
+  .now .hit .ln, .A .hit .ln, .B .hit .ln, .D .hit .ln { color: var(--linenr-cur); }
+
+  .lua {
+    font-family: "SF Mono", Menlo, monospace; font-size: 11.5px;
+    background: #11131c; color: #9aa5ce;
+    padding: 10px 14px; border-top: 1px solid #20222e;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .lua .hl { color: var(--yellow); }
+  .legend { margin-top: 28px; font-size: 12.5px; color: #8a91b8; }
+  .legend b { color: var(--fg); }
+  .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: middle; margin: 0 4px; border: 1px solid #ffffff22; }
+</style>
+</head>
+<body>
+  <h1>fg 預覽窗命中行高亮樣式對照</h1>
+  <div class="sub">Issue #74 · tokyonight night · 底色 <code>#1a1b26</code> · 命中字黃底 = <code>TelescopeMatching</code>(#62 已優化)· 本對照針對<b style="color:#fff">預覽窗整行高亮 <code>TelescopePreviewLine</code></b></div>
+
+  <div class="grid">
+
+    <!-- 目前 -->
+    <div class="card current now">
+      <div class="card-head"><span class="tag now">目前</span><span class="name">預設 Visual（偏淡）</span></div>
+      <div class="preview">
+        <div class="row"><span class="ln">619</span><span class="txt"><span class="c"># 筆記標題</span></span></div>
+        <div class="row"><span class="ln">620</span><span class="txt">前一行內容，作為上下文。</span></div>
+        <div class="row hit"><span class="ln">621</span><span class="txt">這一行包含 <span class="match">關鍵字</span> 命中，整行被高亮。</span></div>
+        <div class="row"><span class="ln">622</span><span class="txt">後一行內容，作為上下文。</span></div>
+        <div class="row"><span class="ln">623</span><span class="txt"><span class="k">const</span> x = <span class="s">"範例"</span></span></div>
+      </div>
+      <div class="lua">-- 現狀：未自訂，link = "Visual" ≈ <span class="hl">#283457</span>（對比過低）</div>
+    </div>
+
+    <!-- A 亮藍底 -->
+    <div class="card A">
+      <div class="card-head"><span class="tag">候選 A</span><span class="name">亮藍底（同色系加亮）</span></div>
+      <div class="preview">
+        <div class="row"><span class="ln">619</span><span class="txt"><span class="c"># 筆記標題</span></span></div>
+        <div class="row"><span class="ln">620</span><span class="txt">前一行內容，作為上下文。</span></div>
+        <div class="row hit"><span class="ln">621</span><span class="txt">這一行包含 <span class="match">關鍵字</span> 命中，整行被高亮。</span></div>
+        <div class="row"><span class="ln">622</span><span class="txt">後一行內容，作為上下文。</span></div>
+        <div class="row"><span class="ln">623</span><span class="txt"><span class="k">const</span> x = <span class="s">"範例"</span></span></div>
+      </div>
+      <div class="lua">nvim_set_hl(0, "TelescopePreviewLine", { bg = "<span class="hl">#3d59a1</span>", bold = true })</div>
+    </div>
+
+    <!-- B 黃 accent bar -->
+    <div class="card B">
+      <div class="card-head"><span class="tag">候選 B</span><span class="name">黃色左側 accent bar + 微底</span></div>
+      <div class="preview">
+        <div class="row"><span class="ln">619</span><span class="txt"><span class="c"># 筆記標題</span></span></div>
+        <div class="row"><span class="ln">620</span><span class="txt">前一行內容，作為上下文。</span></div>
+        <div class="row hit"><span class="ln">621</span><span class="txt">這一行包含 <span class="match">關鍵字</span> 命中，整行被高亮。</span></div>
+        <div class="row"><span class="ln">622</span><span class="txt">後一行內容，作為上下文。</span></div>
+        <div class="row"><span class="ln">623</span><span class="txt"><span class="k">const</span> x = <span class="s">"範例"</span></span></div>
+      </div>
+      <div class="lua">-- 需 sign/extmark 實作左側 bar；近似：
+nvim_set_hl(0, "TelescopePreviewLine", { bg = "<span class="hl">#24304e</span>" })</div>
+    </div>
+
+    <!-- C 黃底黑字 -->
+    <div class="card C">
+      <div class="card-head"><span class="tag">候選 C</span><span class="name">黃底黑字整行（最醒目，呼應列表）</span></div>
+      <div class="preview">
+        <div class="row"><span class="ln">619</span><span class="txt"><span class="c"># 筆記標題</span></span></div>
+        <div class="row"><span class="ln">620</span><span class="txt">前一行內容，作為上下文。</span></div>
+        <div class="row hit"><span class="ln">621</span><span class="txt">這一行包含 關鍵字 命中，整行被高亮。</span></div>
+        <div class="row"><span class="ln">622</span><span class="txt">後一行內容，作為上下文。</span></div>
+        <div class="row"><span class="ln">623</span><span class="txt"><span class="k">const</span> x = <span class="s">"範例"</span></span></div>
+      </div>
+      <div class="lua">nvim_set_hl(0, "TelescopePreviewLine", { bg = "<span class="hl">#ffc777</span>", fg = "#1a1b26", bold = true })</div>
+    </div>
+
+    <!-- D 中藍底粗亮字 -->
+    <div class="card D">
+      <div class="card-head"><span class="tag">候選 D</span><span class="name">中藍底 + 粗體亮字</span></div>
+      <div class="preview">
+        <div class="row"><span class="ln">619</span><span class="txt"><span class="c"># 筆記標題</span></span></div>
+        <div class="row"><span class="ln">620</span><span class="txt">前一行內容，作為上下文。</span></div>
+        <div class="row hit"><span class="ln">621</span><span class="txt">這一行包含 <span class="match">關鍵字</span> 命中，整行被高亮。</span></div>
+        <div class="row"><span class="ln">622</span><span class="txt">後一行內容，作為上下文。</span></div>
+        <div class="row"><span class="ln">623</span><span class="txt"><span class="k">const</span> x = <span class="s">"範例"</span></span></div>
+      </div>
+      <div class="lua">nvim_set_hl(0, "TelescopePreviewLine", { bg = "<span class="hl">#2e3c64</span>", fg = "#c0caf5", bold = true })</div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <p><b>說明</b>：黃底黑字的「關鍵字」是結果列表既有的 <code>TelescopeMatching</code>（#62 已優化，本對照不變）。各卡片差異在<b>整行底色</b>（<code>TelescopePreviewLine</code>）。</p>
+    <p>色票：
+      目前 <span class="swatch" style="background:#283457"></span>#283457 ·
+      A <span class="swatch" style="background:#3d59a1"></span>#3d59a1 ·
+      B <span class="swatch" style="background:#24304e"></span>#24304e+<span class="swatch" style="background:#ffc777"></span>bar ·
+      C <span class="swatch" style="background:#ffc777"></span>#ffc777 ·
+      D <span class="swatch" style="background:#2e3c64"></span>#2e3c64
+    </p>
+    <p><b>選定後</b>：把對應 <code>nvim_set_hl(...)</code> 加進 <code>init.lua</code> 的 ColorScheme autocmd（緊鄰 <code>TelescopeMatching</code> 那行）。候選 B 的左側 bar 需用 extmark/sign 額外實作，單純底色版見片段。</p>
+  </div>
+</body>
+</html>
