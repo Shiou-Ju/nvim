@@ -387,6 +387,10 @@ vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter", "WinEnter"}, {
 
 -- 載入插件
 require("lazy").setup({
+    -- vim-tmux-navigator：Ctrl+hjkl 在 vim split 與 tmux pane 間無縫切換 (Shiou-Ju/nvim#76)
+    -- 接管 <C-h/j/k/l>，到 split 邊界自動跳回 tmux pane（對接 .tmux.conf 的 is_vim 區塊）
+    { "christoomey/vim-tmux-navigator", lazy = false },
+
     -- nvim-surround 插件
       -- 添加環繞 (Add surroundings)：
         -- ysiw B - 將游標所在單詞加粗
