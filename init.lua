@@ -57,6 +57,8 @@ else
     vim.keymap.set('i', 'jk', '<Esc>')
     vim.keymap.set('i', 'kj', '<Esc>')
     vim.keymap.set('i', 'kk', '<Esc>')
+    -- Shift+Enter 在 insert 模式插入換行（對接 iTerm2/tmux 的 CSI-u <S-CR>）(terminal-config #49)
+    vim.keymap.set('i', '<S-CR>', '<CR>', { desc = 'Shift+Enter 插入換行' })
     -- vim.keymap.set('n', 'zc', ':foldclose<CR>')
     -- vim.keymap.set('n', 'zo', ':foldopen<CR>')
     -- 導航切換視窗 
