@@ -201,6 +201,7 @@ Comment/gitcommitComment = { fg = "#7a88cf", italic = false }
 ```
 :NewFile     -- 進階檔案創建（Telescope 整合）
 :CdVimDirHere -- 同步工作目錄
+:CleanFB     -- 清除零寬空格 (U+200B)，常見於 Facebook 複製貼上
 ```
 
 ### Markdown 工具

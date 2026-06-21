@@ -885,6 +885,26 @@ vim.api.nvim_create_user_command('CdVimDirHere', function()
 end, {})
 
 
+-- 清除 Facebook 等平台複製貼上夾帶的零寬空格 (U+200B)
+vim.api.nvim_create_user_command('CleanFB', function()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local count = 0
+  for i, line in ipairs(lines) do
+    local new_line, n = line:gsub('\u{200b}', '')
+    if n > 0 then
+      lines[i] = new_line
+      count = count + n
+    end
+  end
+  if count > 0 then
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    vim.notify('已清除 ' .. count .. ' 個零寬空格')
+  else
+    vim.notify('沒有找到零寬空格')
+  end
+end, { desc = '清除零寬空格 (U+200B)' })
+
+
 -- 將所有 Markdown 相關設定整合到一個 autocmd 中
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
