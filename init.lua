@@ -57,6 +57,8 @@ else
     vim.keymap.set('i', 'jk', '<Esc>')
     vim.keymap.set('i', 'kj', '<Esc>')
     vim.keymap.set('i', 'kk', '<Esc>')
+    -- Shift+Enter 在 insert 模式插入換行（對接 iTerm2/tmux 的 CSI-u <S-CR>）(terminal-config #49)
+    vim.keymap.set('i', '<S-CR>', '<CR>', { desc = 'Shift+Enter 插入換行' })
     -- vim.keymap.set('n', 'zc', ':foldclose<CR>')
     -- vim.keymap.set('n', 'zo', ':foldopen<CR>')
     -- 導航切換視窗 
@@ -389,7 +391,20 @@ vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter", "WinEnter"}, {
 require("lazy").setup({
     -- vim-tmux-navigator：Ctrl+hjkl 在 vim split 與 tmux pane 間無縫切換 (Shiou-Ju/nvim#76)
     -- 接管 <C-h/j/k/l>，到 split 邊界自動跳回 tmux pane（對接 .tmux.conf 的 is_vim 區塊）
-    { "christoomey/vim-tmux-navigator", lazy = false },
+    {
+      "christoomey/vim-tmux-navigator",
+      lazy = false,
+      -- 修正 nvim :terminal 內 <C-hjkl> 字面外洩 TmuxNavigate*（外掛預設 terminal 對應用
+      -- Vim 的 <C-w>: 語法，Neovim terminal mode 不進命令列、整串 RHS 被當字面鍵送進內層
+      -- shell）。改用 <C-\><C-n><Cmd>… 正確覆蓋 (Shiou-Ju/nvim#79)
+      config = function()
+        for key, dir in pairs({ h = 'Left', j = 'Down', k = 'Up', l = 'Right' }) do
+          vim.keymap.set('t', '<C-' .. key .. '>',
+            [[<C-\><C-n><Cmd>TmuxNavigate]] .. dir .. [[<CR>]],
+            { silent = true, desc = 'terminal 內向' .. dir .. ' 切 split/pane' })
+        end
+      end,
+    },
 
     -- nvim-surround 插件
       -- 添加環繞 (Add surroundings)：
