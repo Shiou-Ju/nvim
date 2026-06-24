@@ -1183,6 +1183,8 @@ vim.api.nvim_create_autocmd("TermOpen", {
     if vim.fn.exists('&scrollback') == 1 then
       -- vim.cmd("setlocal scrollback=500000")
       vim.cmd("setlocal scrollback=10000")  -- 改成 1 萬行
+      vim.wo.number = true
+      vim.wo.relativenumber = true
     else
       -- 如果不存在，使用其他方法或忽略
       print("scrollback option not available")
