@@ -52,6 +52,7 @@ if vim.g.vscode then
     vim.keymap.set('n', 'gr', ":call VSCodeNotify('editor.action.goToReferences')<CR>", 
       { desc = 'VSCode 尋找引用' })
 else
+    vim.opt.number = true
     vim.opt.relativenumber = true
     vim.keymap.set('i', 'jj', '<Esc>')
     vim.keymap.set('i', 'jk', '<Esc>')
