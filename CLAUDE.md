@@ -242,6 +242,27 @@ end
 - 合理的 scrollback 限制
 - 折疊狀態記憶
 
+## Claude Code (CCC) 整合與渲染
+
+### 跑法（目前採用）
+- **直接在 nvim `:terminal` 跑 `claude`**：須 **nvim 0.10.4（bob）** + CCC **`/tui default`**，
+  否則渲染不完整（見下）。不需任何外掛。
+
+> **曾評估、目前未採用**：coder/claudecode.nvim + mr55p-dev/claude-tmux.nvim（CCC 跑獨立 tmux pane +
+> WebSocket diff view／send selection）。因直接 `:terminal` 已可正常跑而未納入 `init.lua`；
+> 需要 IDE 整合時可自行裝（背景見 #85、#86）。
+
+### 渲染／scrollback 故障排除（#86）
+- **症狀**：CCC 在 nvim `:terminal` 內 (1) 畫面跑版錯位；(2) 往上捲舊對話只剩空白/殘片。
+- **根因**：CCC 用 Ink 做**全畫面重繪**（cursor-up + erase-line）。
+  (1) nvim **0.12** libvterm 的 DEC mode 2026（synchronized output）與 Ink 衝突 → 跑版；
+  (2) CCC `/tui fullscreen`（alternate screen）+ erase-line 洗掉舊幀，
+  而 nvim libvterm 不像 tmux 保護 scrollback → 舊內容消失。
+- **解法**：nvim **0.10.4** + CCC **`/tui default`**（classic renderer，保留 scrollback），兩問題才同時解。
+- **復原**：**勿在 CCC 內跑 `/tui fullscreen`**（會持久化到 `~/.claude/settings.json` 全域回歸）。
+  若誤觸，跑 `bash scripts/set-claude-tui-default.sh` 一鍵把 `tui` 設回 `default`（只動這一個 key、其餘保留）。
+- 環境面（bob 版本管理、`~/.zshrc` alias、`.tmux.conf` copy-mode）追蹤於 terminal-config repo。
+
 ## 故障排除
 
 ### 常見問題
@@ -274,6 +295,17 @@ end
 - `init.lua` - 主配置檔案
 - `lazy-lock.json` - 插件版本鎖定
 - `backup/` - 配置備份目錄
+
+### 🚨 插件安裝守則（lazy-lock.json 最小變動，接 #77/#81）
+- **❌ 禁用 `Lazy! sync` / `Lazy! update`（全量）**：兩者會連帶升級所有插件，曾把
+  `nvim-lspconfig`、`telescope` 升到不相容版本（#76），並讓 `nvim-lspconfig` 觸發
+  deprecation 警告（#81，刻意留舊 API）。
+- **✅ 新增插件**：寫進 `init.lua` → `Lazy! install`（只裝缺少的）→ 確認 `git diff lazy-lock.json`
+  **僅新增該插件那幾行**，既有 pin 零變動。
+- **✅ 對齊/還原鎖定**：`Lazy! restore`（依 lock 對齊磁碟，不升級）。
+- **✅ 單一升級**：`Lazy! update <plugin>` 指名，不全量。
+- **⚠️ 非預期變動立即復原**：`git checkout HEAD -- lazy-lock.json` 後重跑 install。
+- **nvim-lspconfig 留舊版**：維持 `37cc31c`（舊 API），勿升級（#81）。
 
 ### 最新功能
 - JKL 組合鍵智能模式切換
