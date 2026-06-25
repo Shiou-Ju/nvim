@@ -681,6 +681,9 @@ require("lazy").setup({
       end
 
       -- 配置 marksman
+      --- @diagnostic disable-next-line: deprecated
+      -- FIXME:
+      -- issue #81
       require('lspconfig').marksman.setup({
         on_attach = on_attach,  -- 使用您現有的 on_attach 函數
       })
