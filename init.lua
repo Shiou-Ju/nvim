@@ -52,6 +52,7 @@ if vim.g.vscode then
     vim.keymap.set('n', 'gr', ":call VSCodeNotify('editor.action.goToReferences')<CR>", 
       { desc = 'VSCode 尋找引用' })
 else
+    vim.opt.number = true
     vim.opt.relativenumber = true
     vim.keymap.set('i', 'jj', '<Esc>')
     vim.keymap.set('i', 'jk', '<Esc>')
@@ -1182,6 +1183,8 @@ vim.api.nvim_create_autocmd("TermOpen", {
     if vim.fn.exists('&scrollback') == 1 then
       -- vim.cmd("setlocal scrollback=500000")
       vim.cmd("setlocal scrollback=10000")  -- 改成 1 萬行
+      vim.wo.number = true
+      vim.wo.relativenumber = true
     else
       -- 如果不存在，使用其他方法或忽略
       print("scrollback option not available")
