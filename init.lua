@@ -407,6 +407,17 @@ require("lazy").setup({
       end,
     },
 
+    -- nvim-unception：杜絕 :terminal 內巢狀 nvim/vim，開檔導回宿主 nvim (Shiou-Ju/nvim#92)
+    -- 需早載入以在啟動時註冊 RPC server，故 lazy = false
+    {
+      "samjwill/nvim-unception",
+      lazy = false,
+      init = function()
+        -- 開檔導回父 nvim；git commit 等 $EDITOR 阻塞由 terminal-config 的 core.editor 處理
+        -- 可選：vim.g.unception_open_buffer_in_new_tab = true
+      end,
+    },
+
     -- nvim-surround 插件
       -- 添加環繞 (Add surroundings)：
         -- ysiw B - 將游標所在單詞加粗
