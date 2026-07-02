@@ -1163,6 +1163,12 @@ vim.opt.listchars = ""  -- 清空所有特殊字符的顯示符號
 -- vim.opt.display = "lastline"  -- 顯示超長行的最大部分
 -- vim.opt.sidescroll = 1        -- 水平滾動時一次移動一個字符
 
+-- 讓 Neovim 的 register 與系統剪貼簿共用（issue 89）
+-- 原理：unnamedplus 使 y/d/c/p 直接使用 "+ register（系統剪貼簿）
+-- 效果：nvim 內複製即可在其他 app 貼上，外部複製後 p 直接貼入，免手動 <leader>y
+-- 注意：d/c/x 也會寫入系統剪貼簿，可能污染剪貼簿管理器歷史；macOS 內建 pbcopy/pbpaste 免額外工具
+vim.opt.clipboard = "unnamedplus"
+
 -- 設定智能大小寫（如果搜尋詞中包含大寫字母，則變為區分大小寫）
 vim.opt.ignorecase = true  -- 不區分大小寫
 -- 上面那個要打開，下面才會生效
