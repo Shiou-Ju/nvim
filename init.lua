@@ -138,6 +138,11 @@ else
     vim.keymap.set('n', '<S-Tab>', '<<', { desc = '反縮排', noremap = true })
     vim.keymap.set('v', '<S-Tab>', '<gv', { desc = '反縮排並保持選擇', noremap = true })
 
+    -- jumplist 導航：終端中 Ctrl+i 與 Tab 同鍵，被上方縮排映射遮蔽，以 leader 鍵補位（Shiou-Ju/nvim#95）
+    -- 方向採鍵盤空間設計（i 在 o 左側：左＝往回、右＝往前），刻意與原生 Ctrl+o/Ctrl+i 的字母相反
+    vim.keymap.set('n', '<leader>i', '<C-o>', { desc = 'jumplist 往回（older，左鍵位）', noremap = true })
+    vim.keymap.set('n', '<leader>o', '<C-i>', { desc = 'jumplist 往前（newer，右鍵位）', noremap = true })
+
     -- +y 是複製到系統的剪貼簿
     vim.keymap.set('v', '<leader>y', '"+y', { desc = '複製到系統剪貼簿', noremap = true })
     
