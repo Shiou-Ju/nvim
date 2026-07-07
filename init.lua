@@ -378,6 +378,11 @@ end
 
 -- 基本設定
 vim.opt.termguicolors = true  -- 啟用終端真彩色支援
+
+-- :terminal 專用 ANSI 色盤：調亮 brightBlack（色 8）
+-- Claude Code 主題 base 用 dark-ansi 時，diff 內註解字＝色 8，由這裡決定實際 RGB
+-- （只影響 :terminal，不動編輯器配色；見 terminal-config #135）
+vim.g.terminal_color_8 = '#9aa0a6'
 vim.cmd('syntax enable')      -- 啟用語法高亮
 vim.cmd('filetype plugin indent on')  -- 啟用檔案類型偵測
 
