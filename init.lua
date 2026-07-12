@@ -468,7 +468,9 @@ require("lazy").setup({
       "samjwill/nvim-unception",
       lazy = false,
       init = function()
-        -- 開檔導回父 nvim；git commit 等 $EDITOR 阻塞由 terminal-config 的 core.editor 處理
+        -- 開檔導回父 nvim；git commit 等 $EDITOR 場景 client 等宿主 buffer 關閉
+        -- 才退出，git 才讀得到 COMMIT_EDITMSG（Shiou-Ju/nvim#99）
+        vim.g.unception_block_while_host_edits = true
         -- 可選：vim.g.unception_open_buffer_in_new_tab = true
       end,
     },
