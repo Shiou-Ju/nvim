@@ -38,6 +38,19 @@ tt()
 check('#103 tt 不跨 tab', vim.fn.tabpagenr() == before,
   string.format('before=%d after=%d', before, vim.fn.tabpagenr()))
 
+-- #104：高度 = 行數 × 23%，夾在 8~20 行，並固定高度
+local orig_lines = vim.o.lines
+for _, case in ipairs({ { lines = 24, want = 8 }, { lines = 60, want = 13 }, { lines = 120, want = 20 } }) do
+  reset()
+  vim.o.lines = case.lines
+  tt()
+  local h = vim.fn.winheight(0)
+  check(string.format('#104 lines=%d 高度', case.lines), h == case.want,
+    string.format('lines=%d want=%d got=%d', vim.o.lines, case.want, h))
+  check(string.format('#104 lines=%d winfixheight', case.lines), vim.wo.winfixheight)
+end
+vim.o.lines = orig_lines
+
 reset()
 io.stdout:write(string.format('\n%d 項失敗\n', failed))
 vim.cmd(failed == 0 and 'qa!' or 'cquit! 1')
