@@ -9,10 +9,19 @@
 
 local failed = 0
 
-local function check(name, ok, detail)
-  io.stdout:write(string.format('%s  %s  %s\n', ok and 'PASS' or 'FAIL', name, detail or ''))
+local function report(tag, name, detail)
+  io.stdout:write(string.format('%s  %s  %s\n', tag, name, detail or ''))
   io.stdout:flush()
+end
+
+local function check(name, ok, detail)
+  report(ok and 'PASS' or 'FAIL', name, detail)
   if not ok then failed = failed + 1 end
+end
+
+-- 已知限制：斷錯印 XFAIL（不算失敗）；哪天斷對會印 XPASS，提醒改成一般 check
+local function xfail(name, ok, detail)
+  report(ok and 'XPASS' or 'XFAIL', name, detail)
 end
 
 -- 在新 buffer 放入一行文字，游標移到行首
@@ -45,13 +54,55 @@ vim.cmd('normal yiw')
 local yanked = vim.fn.getreg('"')
 check('中文 yiw 只複製一個詞', #yanked > 0 and #yanked < #zh, 'yanked=' .. yanked)
 
--- 5. 繁體斷詞落點（僅供人工檢視）
-io.stdout:write('\n繁體斷詞（以 | 標示 w 的落點）：\n')
-for _, s in ipairs({
-  '我們明天搭捷運去信義區看電影',
-  '這個便當的滷肉飯和珍珠奶茶很好吃',
-  '請把設定檔推送到遠端儲存庫',
-}) do
+-- 5. b / e / ge 也依詞移動（我們|今天|去|台北|車站|吃飯）
+setline(zh)
+vim.cmd('normal e')
+check('中文 e 停在第一個詞的最後一字', col() == #'我', 'col=' .. col())
+vim.api.nvim_win_set_cursor(0, { 1, #'我們' })
+vim.cmd('normal ge')
+check('中文 ge 退到前一個詞的最後一字', col() == #'我', 'col=' .. col())
+vim.api.nvim_win_set_cursor(0, { 1, #'我們今天去台北車站吃' })
+vim.cmd('normal b')
+check('中文 b 退到當前詞首', col() == #'我們今天去台北車站', 'col=' .. col())
+
+-- 6. 插入模式 Ctrl-W 只刪掉一個詞
+setline('我們今天')
+vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('A<C-w><Esc>', true, false, true), 'mx', false)
+local after = vim.api.nvim_get_current_line()
+check('插入模式 Ctrl-W 只刪一個詞', after == '我們', 'line=' .. after)
+
+-- 7. 繁體詞典：這些詞不應被拆開（需先跑 Lazy! build jieba.vim 產生合成詞典，否則略過）
+-- 游標放在詞首（前面可有上下文 prefix），按一次 w，應剛好停在該詞之後
+local dict = vim.fn.stdpath('data') .. '/jieba/dict.zh_tw.txt'
+local function word_case(line, word, prefix)
+  prefix = prefix or ''
+  setline(line)
+  vim.api.nvim_win_set_cursor(0, { 1, #prefix })
+  vim.cmd('normal w')
+  local want = #prefix + #word
+  return col() == want, string.format('col=%d want=%d', col(), want)
+end
+if vim.fn.filereadable(dict) == 0 then
+  report('SKIP', '繁體詞典測試', '找不到 ' .. dict)
+else
+  for _, case in ipairs({
+    { line = '滷肉飯和', word = '滷肉飯' },
+    { line = '設定檔推送', word = '設定檔', note = '（自訂補詞）' },
+    { line = '看電影了', word = '電影', prefix = '看' },
+    { line = '遠端儲存庫裡', word = '儲存庫', prefix = '遠端' },
+  }) do
+    check('繁體詞不拆開：' .. case.word .. (case.note or ''), word_case(case.line, case.word, case.prefix))
+  end
+  -- 已知限制：受前後文影響斷錯（信義|區看）
+  xfail('繁體詞不拆開：信義區', word_case('去信義區看', '信義區', '去'))
+end
+
+-- 8. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
+io.stdout:write('\n例句斷詞（以 | 標示 w 的落點）：\n')
+local sentences = vim.fn.readfile(vim.fn.stdpath('config') .. '/dict/test_sentences.txt')
+for _, s in ipairs(sentences) do
+  -- 句尾補句號：最後一個詞之後沒有下一個詞時，w 會停在最後一字，造成「電|影」的假象
+  s = s .. '。'
   setline(s)
   local cuts, last = {}, -1
   for _ = 1, 30 do
