@@ -201,13 +201,13 @@ local function toggle_terminal()
     end
   end
   
-  -- 查找當前所有視窗，看是否有顯示終端的視窗
-  local windows = vim.api.nvim_list_wins()
+  -- 只查找當前 tab 的一般視窗（排除浮動視窗），避免跳到其他 tab 的終端（#103）
+  local windows = vim.api.nvim_tabpage_list_wins(0)
   local term_win = nil
-  
+
   for _, win in ipairs(windows) do
     local buf = vim.api.nvim_win_get_buf(win)
-    if vim.bo[buf].buftype == 'terminal' then
+    if vim.bo[buf].buftype == 'terminal' and vim.api.nvim_win_get_config(win).relative == '' then
       term_win = win
       break
     end
