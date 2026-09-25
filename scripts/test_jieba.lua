@@ -97,7 +97,26 @@ else
   xfail('繁體詞不拆開：信義區', word_case('去信義區看', '信義區', '去'))
 end
 
--- 8. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
+-- 8. 詞典合成（lua/jieba_dict.lua）：補詞格式錯誤的行要略過，且不留下暫存檔
+local ok_mod, jd = pcall(require, 'jieba_dict')
+check('詞典合成模組可載入', ok_mod, ok_mod and '' or tostring(jd))
+if ok_mod then
+  local tmp = vim.fn.tempname()
+  vim.fn.mkdir(tmp, 'p')
+  local big, extra, out = tmp .. '/big.txt', tmp .. '/extra.txt', tmp .. '/out.txt'
+  vim.fn.writefile({ '電影 4918 n' }, big)
+  vim.fn.writefile({ '設定檔 1000 n', '錯誤行 n', '', '單詞 5' }, extra)
+  local skipped = jd.merge(big, extra, out)
+  local merged = table.concat(vim.fn.readfile(out), '\n')
+  check('合成保留大詞典與正確補詞', merged:find('電影 4918 n', 1, true) ~= nil
+    and merged:find('設定檔 1000 n', 1, true) ~= nil and merged:find('單詞 5', 1, true) ~= nil)
+  check('格式錯誤的補詞被略過', merged:find('錯誤行', 1, true) == nil
+    and #skipped == 1 and skipped[1].lnum == 2, 'skipped=' .. vim.inspect(skipped))
+  check('合成後不留暫存檔', vim.fn.filereadable(out .. '.tmp') == 0)
+  vim.fn.delete(tmp, 'rf')
+end
+
+-- 9. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
 io.stdout:write('\n例句斷詞（以 | 標示 w 的落點）：\n')
 local sentences = vim.fn.readfile(vim.fn.stdpath('config') .. '/dict/test_sentences.txt')
 for _, s in ipairs(sentences) do
