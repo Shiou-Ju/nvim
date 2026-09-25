@@ -588,6 +588,17 @@ require("lazy").setup({
         -- B - 用 ** 環繞 (粗體)
         -- I - 用 * 環繞 (斜體)
         -- S - 用 ~~ 環繞 (刪除線)
+  -- 中文按詞移動：w/b/e/ge、iw/aw 等依 jieba 斷詞（#107，沿用官方推薦設定）
+  { "tpope/vim-repeat" },
+  {
+    "kkew3/jieba.vim",
+    branch = "release",
+    build = ":call jieba_vim#install()",
+    init = function()
+      vim.g.jieba_vim_lazy = 1    -- 出現中文才載入詞典
+      vim.g.jieba_vim_keymap = 1  -- 啟用全部預設映射（不含預覽與實驗功能）
+    end,
+  },
   {
     "kylechui/nvim-surround",
     version = "*",  -- 使用最新的穩定版本
