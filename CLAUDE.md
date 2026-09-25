@@ -61,8 +61,24 @@ vim.g.mapleader = " "  -- 空格鍵作為領導鍵
 ```lua
 <C-`>       -- VS Code 風格終端開關（在 tmux 外使用）
 <leader>tt  -- tmux 相容終端切換（space tt，所有環境皆可用）
+<leader>tm  -- 終端全螢幕 tab ↔ 底部 split 切換
 <leader>cd  -- 同步 Neovim 工作目錄與終端目錄（CdVimDirHere）
 ```
+
+#### `<leader>tt` 終端切換規則（#103 #104 #105）
+| 情況 | 行為 |
+|------|------|
+| 目前 tab 沒有終端視窗 | 開啟終端（沿用既有的終端 buffer，沒有才新建） |
+| 只有一欄 | 開在整個 tab 最底部，全寬 |
+| 有左右並排的多欄 | 開在目前 focus 那一欄的下方 |
+| 終端已開在別欄 | 搬到目前這一欄 |
+| 終端已開在同一欄或只有一欄 | 游標跳到終端（不搬移，避免 Claude Code 全畫面重繪） |
+| 游標已在終端 | 關閉終端視窗（buffer 保留） |
+
+- 只搜尋**目前 tab** 的視窗，並排除浮動視窗；不會跳到其他 tab 的終端（#103）
+- 高度 = 畫面行數 × 23%，夾在 8~20 行，並設 `winfixheight`（#104）；`resize 23%` 的 `%` 無效，勿再使用
+- 回歸測試：`env -u NVIM nvim --headless -c 'luafile scripts/test_tt.lua'`
+  （在 nvim `:terminal` 裡執行必須加 `env -u NVIM`，否則 nvim-unception 會報錯中斷）
 
 ### 視窗導航
 ```lua
