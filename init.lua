@@ -186,6 +186,24 @@ else
     )
 
 -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 do
+-- 終端高度：畫面行數的 23%，夾在 8~20 行（#104；resize 的 % 無效，會被當成行數）
+local function terminal_height()
+  return math.max(8, math.min(math.floor(vim.o.lines * 0.23), 20))
+end
+
+-- 開啟底部終端視窗：buf 有值就沿用該終端 buffer，否則新建終端
+local function open_terminal_window(buf)
+  vim.cmd('botright split')
+  if buf then
+    vim.cmd('buffer ' .. buf)
+  else
+    vim.cmd('terminal')
+  end
+  vim.cmd('resize ' .. terminal_height())
+  vim.wo.winfixheight = true  -- 避免開關其他 split 時被 equalalways 洗掉高度
+  vim.cmd('startinsert')
+end
+
 -- 提取終端切換邏輯為共用函數
 local function toggle_terminal()
   -- 如果在終端模式，先退出到普通模式
@@ -231,22 +249,8 @@ local function toggle_terminal()
     return
   end
   
-  -- 如果沒有顯示終端的視窗，則開啟/創建終端
-  if #term_buffers > 0 then
-    -- 如果已有終端緩衝區，開啟一個新的底部終端視窗
-    vim.cmd('split')
-    vim.cmd('wincmd J')  -- 將視窗移到最底部
-    vim.cmd('resize 23%')
-    vim.cmd('buffer ' .. term_buffers[1])
-    vim.cmd('startinsert')
-  else
-    -- 如果沒有終端，創建一個新的底部終端
-    vim.cmd('split')
-    vim.cmd('wincmd J')  -- 將視窗移到最底部
-    vim.cmd('resize 23%')
-    vim.cmd('terminal')
-    vim.cmd('startinsert')
-  end
+  -- 如果沒有顯示終端的視窗，則開啟終端（已有終端緩衝區就沿用第一個）
+  open_terminal_window(term_buffers[1])
 end
 
 -- 原有的 Ctrl+` 快捷鍵映射（保持向後相容）
@@ -265,17 +269,13 @@ local function toggle_terminal_maximize()
   if vim.bo[cur_buf].buftype == 'terminal' then
     local tab_wins = vim.api.nvim_tabpage_list_wins(0)
     if #tab_wins == 1 then
-      -- 全螢幕狀態 → 降回底部 23% split
+      -- 全螢幕狀態 → 降回底部 split
       if vim.fn.tabpagenr('$') == 1 then
         vim.notify('終端已是唯一視窗，無處可降回', vim.log.levels.INFO)
         return
       end
       vim.cmd('tabclose')
-      vim.cmd('split')
-      vim.cmd('wincmd J')
-      vim.cmd('resize 23%')
-      vim.cmd('buffer ' .. cur_buf)
-      vim.cmd('startinsert')
+      open_terminal_window(cur_buf)
     else
       -- split 狀態 → 升格獨立 tab 全螢幕
       vim.cmd('wincmd T')
