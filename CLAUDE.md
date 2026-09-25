@@ -28,6 +28,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - glow.nvim (終端預覽)
 - markdown-preview.nvim (瀏覽器預覽)
 - nvim-lint (markdownlint 整合)
+
+-- 中文支援
+- jieba.vim (中文按詞移動，#107)
+- vim-repeat (讓 . 可重複 jieba 操作)
 ```
 
 ## 關鍵功能與快捷鍵
@@ -183,6 +187,22 @@ vim.opt.showbreak = ""        -- 移除換行標記
 -- 終端回滾行數設定
 scrollback = 10000  -- 1萬行歷史記錄
 ```
+
+### 中文按詞移動（jieba.vim，#107）
+- 採官方推薦設定：`jieba_vim_keymap = 1` 啟用全部預設映射（`w/b/e/ge`、`W/B/E/gE`、`iw/aw/iW/aW`、方向鍵、插入模式 `Ctrl-W`），不含預覽與實驗功能
+- `jieba_vim_lazy = 1`：出現中文才載入詞典
+- 安裝需要 dylib 與詞典：`Lazy! install` 在 headless 下不會執行 build，需另跑 `Lazy! build jieba.vim`
+- 繁體詞典：`g:jieba_vim_user_dict` 會**取代**主詞典（不是補充），因此 build 時：
+  1. 從固定 commit 下載 jieba 官方繁體大詞典 `dict.txt.big`（約 8MB，不進 repo）
+  2. 接上 repo 內 `dict/zh_tw_extra.txt` 的自訂補詞（格式：`詞 詞頻 詞性`）
+  3. 合成到 `stdpath('data')/jieba/dict.zh_tw.txt`；檔案不存在時退回預設詞典
+  - 斷錯的詞補進 `dict/zh_tw_extra.txt` 後，重跑 `Lazy! build jieba.vim`
+- 已知限制：
+  - 大詞典改善了「捷運」「滷肉飯」「儲存庫」；「信義區」反而斷成「信義|區看」，原因未查（測試中以 XFAIL 標記）
+  - 沒跑過 build 的機器沒有合成詞典，繁體詞測試會顯示 SKIP
+  - `<leader>yiw` 等 noremap 映射仍使用原生 `iw`
+  - nvim-surround 的 `ysiw` 需另開 `g:jieba_vim_experimental_opfunc` 才會依詞處理
+- 回歸測試：`env -u NVIM nvim --headless -c 'luafile scripts/test_jieba.lua' -c 'cquit! 2'`
 
 ## 折疊與檔案類型設定
 
