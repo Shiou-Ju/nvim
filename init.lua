@@ -186,6 +186,95 @@ else
     )
 
 -- 模擬 VS Code 的 Ctrl + ` 開啟終端功能 do
+-- 終端高度：畫面行數的 23%，夾在 8~20 行（#104；resize 的 % 無效，會被當成行數）
+local function terminal_height()
+  return math.max(8, math.min(math.floor(vim.o.lines * 0.23), 20))
+end
+
+-- 開啟底部終端視窗：buf 有值就沿用該終端 buffer，否則新建終端
+local function open_terminal_window(buf)
+  vim.cmd('botright split')
+  if buf then
+    vim.cmd('buffer ' .. buf)
+  else
+    vim.cmd('terminal')
+  end
+  vim.cmd('resize ' .. terminal_height())
+  vim.wo.winfixheight = true  -- 避免開關其他 split 時被 equalalways 洗掉高度
+  vim.w.tt_mode = 'split'
+  vim.w.tt_prev_buf = nil
+  vim.cmd('startinsert')
+end
+
+-- 回傳 win 所在的「欄」：最內層左右並排（row）節點底下、包含 win 的子節點的第一個 window id
+-- 不在任何 row 底下（只有一欄）時回傳 nil（#105）
+local function lane_key(win)
+  local function first_leaf(node)
+    while node[1] ~= 'leaf' do node = node[2][1] end
+    return node[2]
+  end
+  local function walk(node, lane)
+    if node[1] == 'leaf' then
+      return node[2] == win and lane or nil
+    end
+    for _, child in ipairs(node[2]) do
+      local found = walk(child, node[1] == 'row' and first_leaf(child) or lane)
+      if found then return found end
+    end
+  end
+  return walk(vim.fn.winlayout(), nil)
+end
+
+-- 多欄時讓目前視窗直接變成終端（replace 模式，#105），並記住原本的 buffer 供切回
+local function show_terminal_here(buf)
+  local prev = vim.api.nvim_get_current_buf()
+  if buf then
+    vim.cmd('buffer ' .. buf)
+  else
+    vim.cmd('terminal')
+  end
+  vim.w.tt_mode = 'replace'
+  -- 空的 [No Name] buffer 會被 :terminal 直接重用，此時沒有原檔可切回
+  vim.w.tt_prev_buf = prev ~= vim.api.nvim_get_current_buf() and prev or nil
+  vim.cmd('startinsert')
+end
+
+-- 依版面開啟終端：只有一欄開在底部，多欄則目前視窗直接變成終端
+local function open_terminal(buf)
+  if lane_key(vim.api.nvim_get_current_win()) ~= nil then
+    show_terminal_here(buf)
+  else
+    open_terminal_window(buf)
+  end
+end
+
+-- replace 模式的視窗切回原本的 buffer，找不到就開空白 buffer
+local function restore_window(win)
+  local prev = vim.w[win].tt_prev_buf
+  vim.api.nvim_win_call(win, function()
+    if prev and vim.api.nvim_buf_is_valid(prev) and vim.bo[prev].buflisted
+      and vim.bo[prev].buftype ~= 'terminal' then
+      vim.cmd('buffer ' .. prev)
+    else
+      vim.cmd('enew')
+    end
+  end)
+  vim.w[win].tt_mode = nil
+  vim.w[win].tt_prev_buf = nil
+end
+
+-- 依視窗標記關閉終端：replace 模式切回原檔，其他情況關閉視窗
+local function close_terminal_window(win)
+  if vim.w[win].tt_mode == 'replace' then
+    restore_window(win)
+  elseif #vim.api.nvim_tabpage_list_wins(0) > 1 or vim.fn.tabpagenr('$') > 1 then
+    vim.api.nvim_win_close(win, false)
+  else
+    -- 最後一個視窗無法關閉（E444），改開空白 buffer
+    vim.api.nvim_win_call(win, function() vim.cmd('enew') end)
+  end
+end
+
 -- 提取終端切換邏輯為共用函數
 local function toggle_terminal()
   -- 如果在終端模式，先退出到普通模式
@@ -201,13 +290,13 @@ local function toggle_terminal()
     end
   end
   
-  -- 查找當前所有視窗，看是否有顯示終端的視窗
-  local windows = vim.api.nvim_list_wins()
+  -- 只查找當前 tab 的一般視窗（排除浮動視窗），避免跳到其他 tab 的終端（#103）
+  local windows = vim.api.nvim_tabpage_list_wins(0)
   local term_win = nil
-  
+
   for _, win in ipairs(windows) do
     local buf = vim.api.nvim_win_get_buf(win)
-    if vim.bo[buf].buftype == 'terminal' then
+    if vim.bo[buf].buftype == 'terminal' and vim.api.nvim_win_get_config(win).relative == '' then
       term_win = win
       break
     end
@@ -218,8 +307,14 @@ local function toggle_terminal()
     -- 檢查當前視窗是否就是終端視窗
     local current_win = vim.api.nvim_get_current_win()
     if current_win == term_win then
-      -- 如果當前已在終端視窗，則關閉它
-      vim.api.nvim_win_close(term_win, false)
+      -- 如果當前已在終端視窗，則關閉它（replace 模式改為切回原檔）
+      close_terminal_window(term_win)
+    elseif lane_key(current_win) ~= nil and lane_key(term_win) ~= lane_key(current_win) then
+      -- 多欄且終端在別欄：原視窗還原後，終端搬到目前視窗（#105）
+      -- 同一欄或只有一欄時不搬，避免終端大小改變造成 Claude Code 全畫面重繪
+      local buf = vim.api.nvim_win_get_buf(term_win)
+      close_terminal_window(term_win)
+      open_terminal(buf)
     else
       -- 如果終端視窗已開啟但不是當前視窗，則切換焦點到終端視窗
       vim.api.nvim_set_current_win(term_win)
@@ -231,22 +326,8 @@ local function toggle_terminal()
     return
   end
   
-  -- 如果沒有顯示終端的視窗，則開啟/創建終端
-  if #term_buffers > 0 then
-    -- 如果已有終端緩衝區，開啟一個新的底部終端視窗
-    vim.cmd('split')
-    vim.cmd('wincmd J')  -- 將視窗移到最底部
-    vim.cmd('resize 23%')
-    vim.cmd('buffer ' .. term_buffers[1])
-    vim.cmd('startinsert')
-  else
-    -- 如果沒有終端，創建一個新的底部終端
-    vim.cmd('split')
-    vim.cmd('wincmd J')  -- 將視窗移到最底部
-    vim.cmd('resize 23%')
-    vim.cmd('terminal')
-    vim.cmd('startinsert')
-  end
+  -- 如果沒有顯示終端的視窗，則開啟終端（已有終端緩衝區就沿用第一個）
+  open_terminal(term_buffers[1])
 end
 
 -- 原有的 Ctrl+` 快捷鍵映射（保持向後相容）
@@ -265,15 +346,17 @@ local function toggle_terminal_maximize()
   if vim.bo[cur_buf].buftype == 'terminal' then
     local tab_wins = vim.api.nvim_tabpage_list_wins(0)
     if #tab_wins == 1 then
-      -- 全螢幕狀態 → 降回底部 23% split
+      -- 全螢幕狀態 → 降回原 tab（依版面開在底部或目前視窗）
       if vim.fn.tabpagenr('$') == 1 then
         vim.notify('終端已是唯一視窗，無處可降回', vim.log.levels.INFO)
         return
       end
       vim.cmd('tabclose')
-      vim.cmd('split')
-      vim.cmd('wincmd J')
-      vim.cmd('resize 23%')
+      open_terminal(cur_buf)
+    elseif vim.w.tt_mode == 'replace' then
+      -- replace 模式：原視窗先切回原檔，再另開 tab，避免那一欄消失（#105）
+      restore_window(vim.api.nvim_get_current_win())
+      vim.cmd('tabnew')
       vim.cmd('buffer ' .. cur_buf)
       vim.cmd('startinsert')
     else
