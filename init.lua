@@ -526,33 +526,6 @@ vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter", "WinEnter"}, {
   end
 })
 
--- jieba 繁體詞典（#107）：g:jieba_vim_user_dict 會「取代」主詞典而非補充，
--- 故以官方繁體大詞典 dict.txt.big 為底，再接上 repo 內的自訂補詞，合成一份完整詞典
-local jieba_dict_url = 'https://raw.githubusercontent.com/fxsjy/jieba/237dc6625e5c65d7a2714ffdfa5238dba5cae7d4/extra_dict/dict.txt.big'
-local jieba_dict_dir = vim.fn.stdpath('data') .. '/jieba'
-local jieba_dict_path = jieba_dict_dir .. '/dict.zh_tw.txt'
-
-local function build_jieba_dict()
-  vim.fn.mkdir(jieba_dict_dir, 'p')
-  local big = jieba_dict_dir .. '/dict.txt.big'
-  local res = vim.system({ 'curl', '-fsSL', '-o', big, jieba_dict_url }):wait()
-  if res.code ~= 0 then
-    vim.notify('jieba 繁體詞典下載失敗，沿用預設詞典：' .. (res.stderr or ''), vim.log.levels.WARN)
-    return
-  end
-  local out = assert(io.open(jieba_dict_path, 'w'))
-  for _, file in ipairs({ big, vim.fn.stdpath('config') .. '/dict/zh_tw_extra.txt' }) do
-    local fh = io.open(file, 'r')
-    if fh then
-      local text = fh:read('*a')
-      fh:close()
-      out:write(text)
-      if text ~= '' and text:sub(-1) ~= '\n' then out:write('\n') end
-    end
-  end
-  out:close()
-end
-
 -- 載入插件
 require("lazy").setup({
     -- vim-tmux-navigator：Ctrl+hjkl 在 vim split 與 tmux pane 間無縫切換 (Shiou-Ju/nvim#76)
@@ -622,14 +595,15 @@ require("lazy").setup({
     branch = "release",
     build = function()
       vim.cmd('call jieba_vim#install()')  -- 下載預編譯 dylib
-      build_jieba_dict()
+      require('jieba_dict').build()        -- 合成繁體詞典（lua/jieba_dict.lua）
     end,
     init = function()
       vim.g.jieba_vim_lazy = 1    -- 出現中文才載入詞典
       vim.g.jieba_vim_keymap = 1  -- 啟用全部預設映射（不含預覽與實驗功能）
       -- 合成詞典存在才使用，否則退回 jieba 預設詞典
-      if vim.fn.filereadable(jieba_dict_path) == 1 then
-        vim.g.jieba_vim_user_dict = jieba_dict_path
+      local dict = require('jieba_dict').path
+      if vim.fn.filereadable(dict) == 1 then
+        vim.g.jieba_vim_user_dict = dict
       end
     end,
   },

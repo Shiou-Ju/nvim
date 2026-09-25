@@ -197,6 +197,7 @@ scrollback = 10000  -- 1萬行歷史記錄
   2. 接上 repo 內 `dict/zh_tw_extra.txt` 的自訂補詞（格式：`詞 詞頻 詞性`）
   3. 合成到 `stdpath('data')/jieba/dict.zh_tw.txt`；檔案不存在時退回預設詞典
   - 斷錯的詞補進 `dict/zh_tw_extra.txt` 後，重跑 `Lazy! build jieba.vim`
+  - 合成邏輯在 `lua/jieba_dict.lua`：補詞格式錯的行會略過並警告；下載失敗時沿用先前下載的大詞典；先寫暫存檔再換上
 - 已知限制：
   - 大詞典改善了「捷運」「滷肉飯」「儲存庫」；「信義區」反而斷成「信義|區看」，原因未查（測試中以 XFAIL 標記）
   - 沒跑過 build 的機器沒有合成詞典，繁體詞測試會顯示 SKIP
