@@ -595,12 +595,12 @@ require("lazy").setup({
     branch = "release",
     build = function()
       vim.cmd('call jieba_vim#install()')  -- 下載預編譯 dylib
-      require('jieba_dict').build()        -- 合成繁體詞典（lua/jieba_dict.lua）
+      require('jieba_dict').build()        -- 下載繁體詞典（lua/jieba_dict.lua）
     end,
     init = function()
       vim.g.jieba_vim_lazy = 1    -- 出現中文才載入詞典
       vim.g.jieba_vim_keymap = 1  -- 啟用全部預設映射（不含預覽與實驗功能）
-      -- 合成詞典存在才使用，否則退回 jieba 預設詞典
+      -- 繁體詞典存在才使用，否則退回 jieba 預設詞典
       local dict = require('jieba_dict').path
       if vim.fn.filereadable(dict) == 1 then
         vim.g.jieba_vim_user_dict = dict

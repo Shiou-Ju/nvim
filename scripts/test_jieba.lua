@@ -71,9 +71,9 @@ vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('A<C-w><Esc>', true, false,
 local after = vim.api.nvim_get_current_line()
 check('插入模式 Ctrl-W 只刪一個詞', after == '我們', 'line=' .. after)
 
--- 7. 繁體詞典：這些詞不應被拆開（需先跑 Lazy! build jieba.vim 產生合成詞典，否則略過）
+-- 7. 繁體詞典：這些詞不應被拆開（需先跑 Lazy! build jieba.vim 下載詞典，否則略過）
 -- 游標放在詞首（前面可有上下文 prefix），按一次 w，應剛好停在該詞之後
-local dict = vim.fn.stdpath('data') .. '/jieba/dict.zh_tw.txt'
+local dict = require('jieba_dict').path
 local function word_case(line, word, prefix)
   prefix = prefix or ''
   setline(line)
@@ -87,36 +87,16 @@ if vim.fn.filereadable(dict) == 0 then
 else
   for _, case in ipairs({
     { line = '滷肉飯和', word = '滷肉飯' },
-    { line = '設定檔推送', word = '設定檔', note = '（自訂補詞）' },
     { line = '看電影了', word = '電影', prefix = '看' },
     { line = '遠端儲存庫裡', word = '儲存庫', prefix = '遠端' },
   }) do
-    check('繁體詞不拆開：' .. case.word .. (case.note or ''), word_case(case.line, case.word, case.prefix))
+    check('繁體詞不拆開：' .. case.word, word_case(case.line, case.word, case.prefix))
   end
   -- 已知限制：受前後文影響斷錯（信義|區看）
   xfail('繁體詞不拆開：信義區', word_case('去信義區看', '信義區', '去'))
 end
 
--- 8. 詞典合成（lua/jieba_dict.lua）：補詞格式錯誤的行要略過，且不留下暫存檔
-local ok_mod, jd = pcall(require, 'jieba_dict')
-check('詞典合成模組可載入', ok_mod, ok_mod and '' or tostring(jd))
-if ok_mod then
-  local tmp = vim.fn.tempname()
-  vim.fn.mkdir(tmp, 'p')
-  local big, extra, out = tmp .. '/big.txt', tmp .. '/extra.txt', tmp .. '/out.txt'
-  vim.fn.writefile({ '電影 4918 n' }, big)
-  vim.fn.writefile({ '設定檔 1000 n', '錯誤行 n', '', '單詞 5' }, extra)
-  local skipped = jd.merge(big, extra, out)
-  local merged = table.concat(vim.fn.readfile(out), '\n')
-  check('合成保留大詞典與正確補詞', merged:find('電影 4918 n', 1, true) ~= nil
-    and merged:find('設定檔 1000 n', 1, true) ~= nil and merged:find('單詞 5', 1, true) ~= nil)
-  check('格式錯誤的補詞被略過', merged:find('錯誤行', 1, true) == nil
-    and #skipped == 1 and skipped[1].lnum == 2, 'skipped=' .. vim.inspect(skipped))
-  check('合成後不留暫存檔', vim.fn.filereadable(out .. '.tmp') == 0)
-  vim.fn.delete(tmp, 'rf')
-end
-
--- 9. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
+-- 8. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
 io.stdout:write('\n例句斷詞（以 | 標示 w 的落點）：\n')
 local sentences = vim.fn.readfile(vim.fn.stdpath('config') .. '/dict/test_sentences.txt')
 for _, s in ipairs(sentences) do
