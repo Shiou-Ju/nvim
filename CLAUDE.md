@@ -69,15 +69,19 @@ vim.g.mapleader = " "  -- 空格鍵作為領導鍵
 | 情況 | 行為 |
 |------|------|
 | 目前 tab 沒有終端視窗 | 開啟終端（沿用既有的終端 buffer，沒有才新建） |
-| 只有一欄 | 開在整個 tab 最底部，全寬 |
-| 有左右並排的多欄 | 開在目前 focus 那一欄的下方 |
-| 終端已開在別欄 | 搬到目前這一欄 |
+| 只有一欄（split 模式） | 開在整個 tab 最底部，全寬 |
+| 有左右並排的多欄（replace 模式） | 目前視窗直接變成終端，佔滿整欄 |
+| 終端已開在別欄 | 那個視窗還原後，終端搬到目前視窗 |
 | 終端已開在同一欄或只有一欄 | 游標跳到終端（不搬移，避免 Claude Code 全畫面重繪） |
-| 游標已在終端 | 關閉終端視窗（buffer 保留） |
+| 游標在終端（split 模式） | 關閉終端視窗（buffer 保留） |
+| 游標在終端（replace 模式） | 切回原本的檔案，找不到就開空白 buffer |
+| replace 模式按 `<leader>tm` | 原視窗先切回原檔，再另開 tab 顯示終端 |
+| 從全螢幕 tab 按 `<leader>tm` 降回 | 依上面的版面規則開在底部或目前視窗 |
 
 - 只搜尋**目前 tab** 的視窗，並排除浮動視窗；不會跳到其他 tab 的終端（#103）
-- 高度 = 畫面行數 × 23%，夾在 8~20 行，並設 `winfixheight`（#104）；`resize 23%` 的 `%` 無效，勿再使用
-- 回歸測試：`env -u NVIM nvim --headless -c 'luafile scripts/test_tt.lua'`
+- 模式記在視窗變數 `w:tt_mode`（`split`／`replace`），原檔記在 `w:tt_prev_buf`；沒有標記的終端視窗依 split 模式處理
+- 高度 = 畫面行數 × 23%，夾在 8~20 行，並設 `winfixheight`，只用於 split 模式（#104）；`resize 23%` 的 `%` 無效，勿再使用
+- 回歸測試：`env -u NVIM nvim --headless -c 'luafile scripts/test_tt.lua' -c 'cquit! 2'`
   （在 nvim `:terminal` 裡執行必須加 `env -u NVIM`，否則 nvim-unception 會報錯中斷）
 
 ### 視窗導航
