@@ -96,7 +96,22 @@ else
   xfail('繁體詞不拆開：信義區', word_case('去信義區看', '信義區', '去'))
 end
 
--- 8. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
+-- 8. 詞典檔驗證：下載到的若不是詞典（如 HTML 登入頁）或太小，不應拿去覆蓋舊檔
+local jd = require('jieba_dict')
+check('詞典驗證函數存在', type(jd.valid) == 'function')
+if type(jd.valid) == 'function' then
+  local tmp = vim.fn.tempname()
+  vim.fn.writefile({ '電影 4918 n', '捷運 5 nz' }, tmp .. '.good')
+  vim.fn.writefile({ '<!DOCTYPE html>', '<html><body>login</body></html>' }, tmp .. '.html')
+  check('正常詞典格式通過驗證', jd.valid(tmp .. '.good', 10))
+  check('HTML 內容不通過驗證', not jd.valid(tmp .. '.html', 10))
+  check('檔案太小不通過驗證', not jd.valid(tmp .. '.good'))
+  check('不存在的檔案不通過驗證', not jd.valid(tmp .. '.missing', 10))
+  vim.fn.delete(tmp .. '.good')
+  vim.fn.delete(tmp .. '.html')
+end
+
+-- 9. 例句斷詞落點（僅供人工檢視；例句放在 dict/test_sentences.txt，公開 repo 勿放私人內容）
 io.stdout:write('\n例句斷詞（以 | 標示 w 的落點）：\n')
 local sentences = vim.fn.readfile(vim.fn.stdpath('config') .. '/dict/test_sentences.txt')
 for _, s in ipairs(sentences) do
