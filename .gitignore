@@ -4,6 +4,8 @@
 # Neovim
 *.swp
 *.swo
+# 拼字字典的二進位檔，zg 時會自動重新產生；純文字的 spell/*.add 進版控（#110）
+spell/*.spl
 
 # Node.js / Yarn
 node_modules/
