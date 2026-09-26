@@ -588,6 +588,29 @@ require("lazy").setup({
         -- B - 用 ** 環繞 (粗體)
         -- I - 用 * 環繞 (斜體)
         -- S - 用 ~~ 環繞 (刪除線)
+  -- 中文按詞移動：w/b/e/ge、iw/aw 等依 jieba 斷詞（#107，沿用官方推薦設定）
+  { "tpope/vim-repeat" },
+  {
+    "kkew3/jieba.vim",
+    branch = "release",
+    build = function()
+      -- 下載預編譯 dylib；失敗只警告，不影響下面的詞典下載
+      local ok, err = pcall(vim.cmd, 'call jieba_vim#install()')
+      if not ok then
+        vim.notify('jieba.vim dylib 安裝失敗：' .. tostring(err), vim.log.levels.WARN)
+      end
+      require('jieba_dict').build()        -- 下載繁體詞典（lua/jieba_dict.lua）
+    end,
+    init = function()
+      vim.g.jieba_vim_lazy = 1    -- 出現中文才載入詞典
+      vim.g.jieba_vim_keymap = 1  -- 啟用全部預設映射（不含預覽與實驗功能）
+      -- 繁體詞典存在才使用，否則退回 jieba 預設詞典
+      local dict = require('jieba_dict').path
+      if vim.fn.filereadable(dict) == 1 then
+        vim.g.jieba_vim_user_dict = dict
+      end
+    end,
+  },
   {
     "kylechui/nvim-surround",
     version = "*",  -- 使用最新的穩定版本

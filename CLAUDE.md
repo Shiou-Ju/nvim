@@ -28,6 +28,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - glow.nvim (終端預覽)
 - markdown-preview.nvim (瀏覽器預覽)
 - nvim-lint (markdownlint 整合)
+
+-- 中文支援
+- jieba.vim (中文按詞移動，#107)
+- vim-repeat (讓 . 可重複 jieba 操作)
 ```
 
 ## 關鍵功能與快捷鍵
@@ -183,6 +187,25 @@ vim.opt.showbreak = ""        -- 移除換行標記
 -- 終端回滾行數設定
 scrollback = 10000  -- 1萬行歷史記錄
 ```
+
+### 中文按詞移動（jieba.vim，#107）
+- 採官方推薦設定：`jieba_vim_keymap = 1` 啟用全部預設映射（`w/b/e/ge`、`W/B/E/gE`、`iw/aw/iW/aW`、方向鍵、插入模式 `Ctrl-W`），不含預覽與實驗功能
+- `jieba_vim_lazy = 1`：出現中文才載入詞典
+- 安裝需要 dylib 與詞典：`Lazy! install` 在 headless 下不會執行 build，需另跑 `Lazy! build jieba.vim`
+- **⚠️ 不要升級 lazy.nvim**：`Lazy! build` 曾順帶把 lazy.nvim 升級。build 後必查 `git diff lazy-lock.json`，
+  若 lazy.nvim 版本有變，執行 `git checkout HEAD -- lazy-lock.json` 再 `Lazy! restore lazy.nvim` 對齊回鎖定版本
+- 繁體詞典：`g:jieba_vim_user_dict` 會**取代**主詞典（不是補充），因此 build 時從固定 commit 下載
+  jieba 官方繁體大詞典 `dict.txt.big`（約 8MB，不進 repo）到 `stdpath('data')/jieba/`，直接當成詞典使用；
+  檔案不存在時退回預設詞典。下載邏輯在 `lua/jieba_dict.lua`（先存暫存檔、驗證是詞典格式才換上，失敗時沿用舊檔；有逾時）
+- **第一次安裝後要重開 nvim**：詞典路徑在啟動時決定，build 當下才下載的詞典要重開後才生效
+- **決策：不維護自訂補詞**（為減少維護）。曾實作「大詞典 + 自訂補詞合併」，但補詞只有 1 個、
+  卻帶來合併、格式檢查與相關測試，已移除。斷錯的詞直接接受，不再逐一補救
+- 已知限制：
+  - 大詞典改善了「捷運」「滷肉飯」「儲存庫」；「設定檔」會被拆開、「信義區」斷成「信義|區看」（測試中以 XFAIL 標記）
+  - 沒跑過 build 的機器沒有詞典，繁體詞測試會顯示 SKIP
+  - `<leader>yiw` 等 noremap 映射仍使用原生 `iw`
+  - nvim-surround 的 `ysiw` 需另開 `g:jieba_vim_experimental_opfunc` 才會依詞處理
+- 回歸測試：`env -u NVIM nvim --headless -c 'luafile scripts/test_jieba.lua' -c 'cquit! 2'`
 
 ## 折疊與檔案類型設定
 
