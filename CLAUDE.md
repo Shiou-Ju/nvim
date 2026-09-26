@@ -196,7 +196,8 @@ scrollback = 10000  -- 1萬行歷史記錄
   若 lazy.nvim 版本有變，執行 `git checkout HEAD -- lazy-lock.json` 再 `Lazy! restore lazy.nvim` 對齊回鎖定版本
 - 繁體詞典：`g:jieba_vim_user_dict` 會**取代**主詞典（不是補充），因此 build 時從固定 commit 下載
   jieba 官方繁體大詞典 `dict.txt.big`（約 8MB，不進 repo）到 `stdpath('data')/jieba/`，直接當成詞典使用；
-  檔案不存在時退回預設詞典。下載邏輯在 `lua/jieba_dict.lua`（先存暫存檔再換上，失敗時沿用舊檔）
+  檔案不存在時退回預設詞典。下載邏輯在 `lua/jieba_dict.lua`（先存暫存檔、驗證是詞典格式才換上，失敗時沿用舊檔；有逾時）
+- **第一次安裝後要重開 nvim**：詞典路徑在啟動時決定，build 當下才下載的詞典要重開後才生效
 - **決策：不維護自訂補詞**（為減少維護）。曾實作「大詞典 + 自訂補詞合併」，但補詞只有 1 個、
   卻帶來合併、格式檢查與相關測試，已移除。斷錯的詞直接接受，不再逐一補救
 - 已知限制：
