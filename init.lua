@@ -594,7 +594,11 @@ require("lazy").setup({
     "kkew3/jieba.vim",
     branch = "release",
     build = function()
-      vim.cmd('call jieba_vim#install()')  -- 下載預編譯 dylib
+      -- 下載預編譯 dylib；失敗只警告，不影響下面的詞典下載
+      local ok, err = pcall(vim.cmd, 'call jieba_vim#install()')
+      if not ok then
+        vim.notify('jieba.vim dylib 安裝失敗：' .. tostring(err), vim.log.levels.WARN)
+      end
       require('jieba_dict').build()        -- 下載繁體詞典（lua/jieba_dict.lua）
     end,
     init = function()
