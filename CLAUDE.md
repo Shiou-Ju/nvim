@@ -131,6 +131,9 @@ vim.g.mapleader = " "  -- 空格鍵作為領導鍵
 - markdownlint 自動檢查
 ```
 
+- Glow 預覽回歸測試（#113）：`env -u NVIM nvim --headless -c 'luafile scripts/test_glow.lua' -c 'cquit! 2'`
+  （headless 下 glow 不上色，只驗證預覽內容有出現，不驗排版）
+
 ### nvim-surround 自訂映射
 ```lua
 -- Markdown 環繞操作
